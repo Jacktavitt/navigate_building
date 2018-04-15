@@ -1,5 +1,6 @@
 # from tut here: https://www.pyimagesearch.com/2016/02/08/opencv-shape-detection/
-from shape_detector import ShapeDetector, ImageUtilities
+from shape_detector import ShapeDetector
+import HandyImageTools as ht
 import argparse
 import imutils
 import cv2
@@ -11,7 +12,7 @@ args = vars(ap.parse_args())
 
 #preprocess image
 image = cv2.imread(args["image"])
-resized = ImageUtilities.resized(image, 300)
+resized = ht.resize(image, 400)
 # resized= imutils.resize(image, width=300)
 image = resized
 ratio=image.shape[0] / float(resized.shape[0])

@@ -1,0 +1,9 @@
+# Byte-compiled files
+__pycache__/
+#rando .exe (why?)
+*.exe
+#too-big files
+/images/drive-download-20180409T175248Z-001.zip
+*.jpg
+*.JPG
+images/
