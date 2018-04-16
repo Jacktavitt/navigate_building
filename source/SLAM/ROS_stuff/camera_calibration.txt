@@ -1,2 +1,54 @@
-from http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration
+tutorial from http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration
 
+printed out an image, 4 X 5 black blocks, each block 23 mm
+
+ran my script
+
+ran
+rosrun rqt_graph rqt_graph
+to get the graph output
+then ran 
+rostopic echo /usb_cam/image_raw
+which spat out lots of numbers, i think poixel vlaues
+ran
+rostopic type /usb_cam/image_raw
+and it told me 'sensor_msgs/Image'
+
+ran:
+rosrun camera_calibration cameracalibrator.py --size 8x--square .023 image=:/usb_cam/image_raw camera=:/usb_cam
+
+
+
+didn't work. added
+ --no-service-check 
+ but it didnt work.
+
+
+ ran
+ rosmake camera_calibration
+ and restarted the computer.
+ ran
+ rosrun camera_calibration cameracalibrator.py --size 8x6 --square 0.023 image:=/usb_cam/image_raw camera:=/usb_cam
+ and it worked! Moved the grid around and it caught most of it.
+ Hit 'calibrate' button and am waiting for it to finish.
+
+got his from output:
+[ INFO] [1523839130.452026260]: Using transport "raw"
+[ INFO] [1523840379.784780636]: writing calibration data to /home/johnny/.ros/camera_info/head_camera.yaml
+
+adding calibration file to this repo. WILL NEED to redo if the fisheye is bumped or removed. 
+
+useful URLs:
+image_view:
+http://wiki.ros.org/image_view
+
+usb_cam:
+http://wiki.ros.org/usb_cam
+
+help with topics:
+http://wiki.ros.org/ROS/Tutorials/UnderstandingTopics
+
+
+ran, thanks to https://github.com/tum-vision/lsd_slam/issues/293
+ rosrun lsd_slam_core live_slam /image:=/usb_cam/image_raw /camera_info:=/usb_cam _calib:=/home/johnny/Documents/thesis/navigate_building/source/SLAM/head_camera.txt
+ which started the lsd_viewer!
