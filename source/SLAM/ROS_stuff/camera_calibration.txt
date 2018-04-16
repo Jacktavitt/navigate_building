@@ -52,3 +52,36 @@ http://wiki.ros.org/ROS/Tutorials/UnderstandingTopics
 ran, thanks to https://github.com/tum-vision/lsd_slam/issues/293
  rosrun lsd_slam_core live_slam /image:=/usb_cam/image_raw /camera_info:=/usb_cam _calib:=/home/johnny/Documents/thesis/navigate_building/source/SLAM/head_camera.txt
  which started the lsd_viewer!
+
+sometimes USB camera is not default (/dev/video0)
+
+so it must be added to arguments for usb_cam
+
+rosrun usb_cam usb_cam_node ~video_device /dev/video1
+
+some successful runs => got an error-throw:
+terminate called after throwing an instance of 'Sophus::ScaleNotPositive'
+  what():  Sophus exception: Scale factor is not positive
+Aborted (core dumped)
+
+happened twice, not sure what it means.
+
+might be able to make a bag, and run it:
+
+set up camera, but not lsd_slam
+
+rosbag record -a
+
+then when done:
+
+shut everything down except for roscore
+
+rosparam set use_sim_time true
+rosbag play <bagname> --clock # use time in bagfile
+
+run the lsd_slam 
+
+save it?
+
+did a bag of hallway:
+/home/johnny/Documents/2018-04-16-11-19-17.bag
