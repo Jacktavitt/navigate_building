@@ -1,0 +1,15 @@
+stopped here :
+http://wiki.ros.org/ROS/Tutorials/WritingServiceClient%28python%29
+
+on saturday.
+
+note: must run 
+source devel/setup.bash
+from workspace you are in
+
+to allow packages to be found in the workspace
+
+started this tutorial:
+http://wiki.ros.org/image_transport/Tutorials
+on Sunday, but it was in c++, so moved to this:
+http://wiki.ros.org/rospy_tutorials/Tutorials/WritingImagePublisherSubscriber

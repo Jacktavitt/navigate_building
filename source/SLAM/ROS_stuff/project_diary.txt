@@ -85,3 +85,14 @@ save it?
 
 did a bag of hallway:
 /home/johnny/Documents/2018-04-16-11-19-17.bag
+
+4-29-18
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+using tutorials here
+http://wiki.ros.org/ROS/Tutorials
+and here
+https://gist.github.com/rethink-imcmahon/77a1a4d5506258f3dc1f
+and here
+http://wiki.ros.org/rospy_tutorials/Tutorials/WritingImagePublisherSubscriber
+to try to make something that will subscribe to a camera.
+
