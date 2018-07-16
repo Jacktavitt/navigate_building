@@ -1,8 +1,0 @@
-prefix=/home/johnny/Documents/thesis/navigate_building/source/SLAM/ROS_stuff/image_processing_ws/install
-
-Name: learning_image_transport
-Description: Description of learning_image_transport
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/johnny/Documents/thesis/navigate_building/source/SLAM/ROS_stuff/image_processing_ws/install/lib 
-Requires: 
