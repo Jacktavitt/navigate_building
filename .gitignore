@@ -1,5 +1,6 @@
 # Byte-compiled files
-__pycache__/
+# ignore all pycashes in the source/ directory and any of its subdirectories
+source/**/__pycache__/
 #rando .exe (why?)
 *.exe
 #too-big files
