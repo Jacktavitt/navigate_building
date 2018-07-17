@@ -1,4 +1,4 @@
-import Exception
+# import Exception
 
 class NoImageError(Exception):
     '''Custom exception for missing images.
