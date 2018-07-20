@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+  <title>Student Survey Form</title>
+</head>
+<body>
+    <h1>Hello!</h1>
+      <p>
+        Thank you for taking the time to fill out this survey.
+        This information is <em>TOTALLY ANONYMOUS</em> so please answer freely and to the best of your abiliy!
+      </p>
+  <form action="#" method = "POST" id="surveyForm">
+
+      <h3>Initial Questions</h3>
+      <ul>
+        <li>
+          <div class="question">How would you describe your level of vision?</div>
+          <div class="answer"><input type="text" name="vision_level"/></div>
+        </li>
+        <li>
+          <div class="question">How long have you had a visual impairment?</div>
+          <div class="answer"><input type="text" name="how_long"/></div>
+        <li>
+          <div class="question">What do you use to help you navigate the University?</div>
+          <div class="answer"><input type="text" name="aid"/></div>
+        </li>
+        <li>
+          <div class="question">If you use a screen reader, which do you prefer?</div>
+          <div class="answer"><input type="text" name="reader"/></div>
+        </li>
+        <li>
+          <div class="question">What elements of the Disabiliy Services Office do you use?</div>
+          <div class="answer"><input type="text" name="DSO"/></div>
+        </li>
+      </ul>
+      
+      <h3>Scale Questions</h3>
+      <ul>
+        <li>
+          <div class="question">What is your experience navigating the University building interiors?</div>
+          <div class="answer">
+            <input type="radio" value="Very Easy" name="interior_navi">Very Easy
+            <input type="radio" value="Easy" name="interior_navi">Easy
+            <input type="radio" value="Neuulal" name="interior_navi">Neuulal
+            <input type="radio" value="Difficult" name="interior_navi">Difficult
+            <input type="radio" value="Very Difficult" name="interior_navi">Very Difficult
+          </div>
+        </li>
+        <li>
+          <div class="question">What is your experience navigating the campus outdoors?</div>
+          <div class="answer">
+            <input type="radio" value="Very Easy" name="exterior_navi">Very Easy
+            <input type="radio" value="Easy" name="exterior_navi">Easy
+            <input type="radio" value="Neuulal" name="exterior_navi">Neuulal
+            <input type="radio" value="Difficult" name="exterior_navi">Difficult
+            <input type="radio" value="Very Difficult" name="exterior_navi">Very Difficult
+          </div>
+        </li>
+        <li>
+          <div class="question">How helpful are the wall plaques next to classrooms and other faciliies?</div>
+          <div class="answer">
+            <input type="radio" value="Very Helpful" name="plaques">Very Helpful
+            <input type="radio" value="Helpful" name="plaques">Helpful
+            <input type="radio" value="Neutral" name="plaques">Neutral
+            <input type="radio" value="Unelpful" name="plaques">Unelpful
+            <input type="radio" value="Very Unelpful" name="plaques">Very Unelpful
+          </div>
+        </li>
+        <li>
+          <div class="question">How long until you have internalized a route (for instance, between your dorm and the dining hall)?
+          <div class="answer"> 
+            <input type="radio" value="1 to 7 Days" name="route">1 to 7 Days
+            <input type="radio" value="8 to 24 Days" name="route">8 to 24 Days
+            <input type="radio" value="25 to 40 Days" name="route">25 to 40 Days
+            <input type="radio" value="41 to 65 Days" name="route">41 to 65 Days
+            <input type="radio" value="More than 66 Days" name="route">More than 66 Days
+          </div>
+        </li>
+      </ul>
+      <h3>Yes or No Questions</h3>
+      <ul>
+        <li>
+          <div class="question">Do you use a cane?</div>
+          <div class="answer">
+            <input type="radio" value="Yes" name="cane">Yes
+            <input type="radio" value="No" name="cane">No
+          </div>
+        </li>
+        <li>
+          <div class="question">Do you have a service animal?</div>
+          <div class="answer">
+            <input type="radio" value="Yes" name="animal">Yes
+            <input type="radio" value="No" name="animal">No
+          </div>
+        </li>
+        <li>
+          <div class="question">Does someone help guide you between classes?</div>
+          <div class="answer">
+              <input type="radio" value="Yes" name="helper">Yes
+              <input type="radio" value="No" name="helper">No
+          </div>
+        </li>
+        <li>
+          <div class="question">Does navigating classes get in the way of schoolwork or attendance?</div>
+          <div class="answer">
+            <input type="radio" value="Yes" name="attendance">Yes
+            <input type="radio" value="No" name="attendance">No
+          </div>
+        </li>
+        <li>
+          <div class="question">Have you become lost on campus?</div>
+          <div class="answer">
+            <input type="radio" value="Yes" name="campus">Yes
+            <input type="radio" value="No" name="campus">No
+          </div>
+        </li>
+        <li>
+          <div class="question">Have you become lost inside a university building?</div>
+          <div class="answer">
+            <input type="radio" value="Yes" name="building">Yes
+            <input type="radio" value="No" name="building">No
+          </div>
+        </li>
+      </ul>
+      <h3>Open-ended Questions</h3>
+      <ul>
+        <li>
+          <div class="question">If you are travelling without an aid or a seeing-eye dog, how do you map the trip in your mind?</div>
+          <div class="answer"><textarea form="surveyForm" rows="4" cols="50"></textarea></div>
+        </li>
+        <li>
+          <div class="question">If you travel with an aid or seeing-eye dog, how do you map the trip in your mind?</div>
+          <div class="answer"><textarea form="surveyForm" rows="4" cols="50"></textarea></div>
+        </li>
+        <li>
+          <div class="question">What is your experience of the University buildings inside? How do you understand the layout? What stands out to you?</div>
+          <div class="answer"><textarea form="surveyForm" rows="4" cols="50"></textarea></div>
+        <li>
+          <div class="question">What is your experience of the campus outside? How do you understand the layout? What stands out to you? </div>
+          <div class="answer"><textarea form="surveyForm" rows="4" cols="50"></textarea></div>
+        </li>
+        <li>
+          <div class="question">What would you find helpful for navigating the inside of campus buildings? </div>
+          <div class="answer"><textarea form="surveyForm" rows="4" cols="50"></textarea></div>
+        <li>
+          <div class="question">If you had an app that would give you directions from your current room to another room in the building, what would you want the directions to sound like? For example, would you like the turning directions to be in terms of Left and Right and Straight, or East and West? Or some other format? What measure of distance would be most helpful? Metric ("Go ahead 5 feet"), Relative ("Take 3 paces forward"), Constant ("Six doors ahead and arrive at an exit"), or some other method? If you feel strongly, please elaborate!</div>
+          <div class="answer"><textarea form="surveyForm" rows="4" cols="50"></textarea></div>
+        </li>
+      </ul>
+    <table>
+      <td><input type="reset"/></td>
+      <td><input type="submit" value="Send Survey"/></td>
+    </table>
+  </form>
+  
+</body>
+
+</body>
+</html>
