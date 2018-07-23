@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+  <link rel="stylesheet" href="style.css">
+  <title>Student Survey Form</title>
+</head>
+<body>
+  <h1>Hello!</h1>
+    <p>
+      Thank you for taking the time to fill out this survey.
+      This information is <em>TOTALLY ANONYMOUS</em> so please answer freely and to the best of your ability!
+    </p>
+  <form action="#" method = "POST" id="surveyForm">
+    <h3>Initial Questions</h3>
+    <fieldset>
+      <div>
+        <label for="vision_level">How would you describe your level of vision?</label>
+        <input type="text" id="vision_level" name="vision_level"/>
+      </div>
+    </fieldset>
+    <fieldset>  
+      <div>
+        <label for="how_long">How long have you had a visual impairment?</label>
+        <input type="text" name="how_long" id="how_long" />
+      </div>
+    </fieldset>
+    <fieldset>
+      <div>
+        <label for="aid">What do you use to help you navigate the University?</label>
+        <input type="text" id="aid" name="aid"/>
+      </div>
+    </fieldset>
+    <fieldset>
+      <div>
+        <label for="screen_reader">If you use a screen reader, which do you prefer?</label>
+        <input type="text" name="screen_reader" id="screen_reader"/>
+      </div>
+    </fieldset>
+    <fieldset>
+      <div>
+          <label for="DSO">What elements of the Disabiliy Services Office do you use?</label>
+        <input type="text" name="DSO" id="DSO" />
+      </div>
+    </fieldset>
+    <h3>Scale Questions</h3>
+      <fieldset>
+        <legend>What is your experience navigating the University building interiors?</legend>
+        <div>
+          <input type="radio" name="interiors" value="Very Easy" id="interiors">
+          <label for="interiors">Very Easy</label>
+        </div>
+        <div>
+          <input type="radio" name="interiors" value="Easy" id="interiors">
+          <label for="interiors">Easy</label>
+        </div>
+        <div>
+          <input type="radio" name="interiors" value="Neutral" id="interiors">
+          <label for="interiors">Neutral</label>
+        </div>
+        <div>
+          <input type="radio" name="interiors" value="Difficult" id="interiors">
+          <label for="interiors">Difficult</label>
+        </div>
+        <div>
+          <input type="radio" name="interiors" value="Very Difficult" id="interiors">
+          <label for="interiors">Very Difficult</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>What is your experience navigating the campus outdoors?</legend>
+        <div>
+          <input type="radio" name="outdoors" value="Very Easy" id="outdoors">
+          <label for="outdoors">Very Easy</label>
+        </div>
+        <div>
+          <input type="radio" name="outdoors" value="Easy" id="outdoors">
+          <label for="outdoors">Easy</label>
+        </div>
+        <div>
+          <input type="radio" name="outdoors" value="Neutral" id="outdoors">
+          <label for="outdoors">Neutral</label>
+        </div>
+        <div>
+          <input type="radio" name="outdoors" value="Difficult" id="outdoors">
+          <label for="outdoors">Difficult</label>
+        </div>
+        <div>
+          <input type="radio" name="outdoors" value="Very Difficult" id="outdoors">
+          <label for="outdoors">Very Difficult</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>How helpful are the wall plaques next to classrooms and other faciliies?</legend>
+        <div>
+          <input type="radio" name="wall_plaques" value="Very Helpful" id="wall_plaques">
+          <label for="wall_plaques">Very Helpful</label>
+        </div>
+        <div>
+          <input type="radio" name="wall_plaques" value="Helpful" id="wall_plaques">
+          <label for="wall_plaques">Helpful</label>
+        </div>
+        <div>
+          <input type="radio" name="wall_plaques" value="Neutral" id="wall_plaques">
+          <label for="wall_plaques">Neutral</label>
+        </div>
+        <div>
+          <input type="radio" name="wall_plaques" value="Unhelpful" id="wall_plaques">
+          <label for="wall_plaques">Unhelpful</label>
+        </div>
+        <div>
+          <input type="radio" name="wall_plaques" value="Very Unhelpful" id="wall_plaques">
+          <label for="wall_plaques">Very Unhelpful</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>How long until you have internalized a route (for instance, between your dorm and the dining hall)?</legend>
+        <div>
+          <input type="radio" name="internal_route" value="1 to 7 Days" id="internal_route">
+          <label for="internal_route">1 to 7 Days</label>
+        </div>
+        <div>
+          <input type="radio" name="internal_route" value="8 to 24 Days" id="internal_route">
+          <label for="internal_route">8 to 24 Days</label>
+        </div>
+        <div>
+          <input type="radio" name="internal_route" value="25 to 40 Days" id="internal_route">
+          <label for="internal_route">25 to 40 Days</label>
+        </div>
+        <div>
+          <input type="radio" name="internal_route" value="41 to 65 Days" id="internal_route">
+          <label for="internal_route">41 to 65 Days</label>
+        </div>
+        <div>
+          <input type="radio" name="internal_route" value="More than 66 Days" id="internal_route">
+          <label for="internal_route">More than 66 Days</label>
+        </div>
+      </fieldset>
+    <h3>Yes or No Questions</h3>
+      <fieldset>
+        <legend>Do you use a cane?</legend>
+        <div>
+          <input type="radio" name="cane" value="Yes" id="cane">
+          <label for="cane">Yes</label>
+        </div>
+        <div>
+          <input type="radio" name="cane" value="No" id="cane">
+          <label for="cane">No</label> 
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Do you have a service animal?</legend>
+        <div>
+          <input type="radio" name="animal" value="Yes" id="animal">
+          <label for="animal">Yes</label>
+        </div>
+        <div>
+          <input type="radio" name="animal" value="No" id="animal">
+          <label for="animal">No</label> 
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Does someone help guide you between classes?</legend>
+        <div>
+          <input type="radio" name="helper" value="Yes" id="helper">
+          <label for="helper">Yes</label>
+        </div>
+        <div>
+          <input type="radio" name="helper" value="No" id="helper">
+          <label for="helper">No</label> 
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Does navigating classes get in the way of schoolwork or attendance?</legend>
+        <div>
+          <input type="radio" name="attendance" value="Yes" id="attendance">
+          <label for="attendance">Yes</label>
+        </div>
+        <div>
+          <input type="radio" name="attendance" value="No" id="attendance">
+          <label for="attendance">No</label> 
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Have you become lost on campus?</legend>
+        <div>
+          <input type="radio" name="lost_campus" value="Yes" id="lost_campus">
+          <label for="lost_campus">Yes</label>
+        </div>
+        <div>
+          <input type="radio" name="lost_campus" value="No" id="lost_campus">
+          <label for="lost_campus">No</label> 
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Have you become lost inside a university building?</legend>
+        <div>
+          <input type="radio" name="lost_inside" value="Yes" id="lost_inside">
+          <label for="lost_inside">Yes</label>
+        </div>
+        <div>
+          <input type="radio" name="lost_inside" value="No" id="lost_inside">
+          <label for="lost_inside">No</label> 
+        </div>
+      </fieldset>
+    <h3>Open-ended Questions</h3>
+      <fieldset>
+        <legend>If you are travelling without an aid or a seeing-eye dog, how do you map the trip in your mind?</legend>
+        <div role="textbox" contenteditable="true" id="without_aid" aria-multiline="true">
+          <textarea></textarea>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>If you travel with an aid or seeing-eye dog, how do you map the trip in your mind?</legend>
+        <div role="textbox" contenteditable="true" id="with_aid" aria-multiline="true">
+          <textarea></textarea>
+        </div>
+      </fieldset>
+      <fieldset> 
+        <legend>What is your experience of the University buildings inside? How do you understand the layout? What stands out to you?</legend>
+        <div role="textbox" contenteditable="true" id="inside" aria-multiline="true">
+          <textarea></textarea>
+        </div>
+      </fieldset>
+      <fieldset> 
+        <legend>What is your experience of the campus outside? How do you understand the layout? What stands out to you?</legend>
+        <div role="textbox" contenteditable="true" id="outsixe" aria-multiline="true">
+          <textarea></textarea>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>What would you find helpful for navigating the inside of campus buildings?</legend>
+        <div role="textbox" contenteditable="true" id="suggestions" aria-multiline="true">
+          <textarea></textarea>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>If you had an app that would give you directions from your current room to another room in the building, what would you want the directions to sound like? For example, would you like the turning directions to be in terms of Left and Right and Straight, or East and West? Or some other format? What measure of distance would be most helpful? Metric ("Go ahead 5 feet"), Relative ("Take 3 paces forward"), Constant ("Six doors ahead and arrive at an exit"), or some other method? If you feel strongly, please elaborate!</legend>
+        <div role="textbox" contenteditable="true" id="directions_app" aria-multiline="true">
+          <textarea></textarea>
+        </div>
+      </fieldset>
+    <table>
+      <td><input type="reset"/></td>
+      <td><input type="submit" value="Send Survey"/></td>
+    </table>
+  </form>
+</body>
+</html>
