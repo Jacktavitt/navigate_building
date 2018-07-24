@@ -1,0 +1,3 @@
+must download tesseract-ocr:
+https://github.com/tesseract-ocr/tesseract/wiki
+gotta add the enclosing folder to Path variable instead of TESSDATA_PREFIX

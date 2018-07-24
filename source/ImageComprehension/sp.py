@@ -3,7 +3,7 @@ import numpy as np
 
 
 image = np.full((500,500),200,dtype=np.uint8)
-image=cv2.rectangle(img,(230,230),(300,300),0,-1)
+image=cv2.rectangle(image,(230,230),(300,300),0,-1)
 
 
 def show(image):
@@ -12,7 +12,9 @@ def show(image):
     cv2.destroyAllWindows()
 
 def snp(image, amount = .004):
-    row,col = image.shape
+    shapeinfo = image.shape
+    row=shapeinfo[0]
+    col=shapeinfo[1]
     s_vs_p = 0.5
     out = np.copy(image)
     # Salt mode
