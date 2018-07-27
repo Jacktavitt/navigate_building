@@ -1,13 +1,13 @@
-import dataGenerator
-import customImage
+import DataGenerator
+import CustomImage
 import cv2
 import numpy as np
 import sys
 
 
 
-IMAGE_CLASS = customImage.GeneratedImage
-IMG_GENR = dataGenerator.ImageGenerator(IMAGE_CLASS, size = 512)
+IMAGE_CLASS = CustomImage.GeneratedImage
+IMG_GENR = DataGenerator.ImageGenerator(IMAGE_CLASS, size = 512)
 
 #create 10 each plain noise images and labelled images
 noSignList = []

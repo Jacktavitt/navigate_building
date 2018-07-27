@@ -2,8 +2,8 @@
 Driver for generating training and test data for the Image Comprehesion
 aspect of the room navigator.
 """
-import dataGenerator
-import customImage
+import DataGenerator
+import CustomImage
 import cv2
 import numpy as np
 import os
@@ -14,8 +14,8 @@ from argparse import ArgumentParser
 
 
 def main(directory, seed, images, noise):
-    IMAGE_CLASS = customImage.GeneratedImage
-    IMG_GENR = dataGenerator.ImageGenerator(IMAGE_CLASS, size = (512,512,3),
+    IMAGE_CLASS = CustomImage.GeneratedImage
+    IMG_GENR = DataGenerator.ImageGenerator(IMAGE_CLASS, size = (512,512,3),
                                             randSeed = int(seed),plaqueSize=75)
     for i in range(0,int(images)):
         bi=IMG_GENR.make_false_image(num_randos=int(noise))

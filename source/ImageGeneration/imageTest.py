@@ -1,4 +1,4 @@
-import customImage as ci
+import CustomImage as ci
 import numpy as np
 import random
 import cv2

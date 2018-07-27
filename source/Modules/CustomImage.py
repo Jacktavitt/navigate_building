@@ -5,7 +5,7 @@ import math
 import cv2
 import random
 import numpy as np
-import customErrors as cerr
+import CustomErrors as cerr
 
 class Image(object):
     '''Base class for custom images. Trying hand at pythonic polymorphism.

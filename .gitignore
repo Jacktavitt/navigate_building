@@ -8,3 +8,4 @@ source/**/__pycache__/
 *.jpg
 *.JPG
 images/
+*.png
