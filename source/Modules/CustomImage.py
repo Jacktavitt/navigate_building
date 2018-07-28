@@ -28,14 +28,19 @@ class Image(object):
             self.image = image
         self.imagePath = ''.join(path+fileName+extension)
         self.seed = seed
-        if color is not None:
-            self.color = True
-        else:
-            self.color = False
-        # TODO: if self.image.shape is not 3:
-                # self.color=False
-                # else: self.color=True
+        if self.image.shape is not 3:
+            self.color=False
+        else: 
+            self.color=True
         # random.seed(self.seed)
+
+    # def __getitem__(self):
+    #     '''overloaded braket to return image'''
+    #     return self.image
+
+    def get_shape(self):
+        '''returns numpy shape to avoid accessing image object'''
+        return self.image.shape
 
     def resize(self, *, percentage = None, vertical = None, horizontal = None):
         ''' resize image.
@@ -58,7 +63,6 @@ class Image(object):
 
         self.image = cv2.resize(self.image,None,fx=factor, fy=factor)
 
-
     def show(self, title = "image"):
         '''Show the image in a window. will wait for kill signal.'''
         try:
@@ -68,49 +72,6 @@ class Image(object):
         except Exception as e:
             print("error occured: {}",e)
             raise
-
-    @classmethod
-    def add_many(cls, image_list):
-        '''creates a big image from many and shows it.
-            not smart so dont make an image that is too big!
-            also not smart and can only take even swquares!
-        '''
-        numImages = len(image_list)
-        x = math.ceil(math.sqrt(numImages))
-        if x == math.sqrt(numImages):
-            y = int(x)
-            # add images together by y
-            horizStrips=[]
-            for i in range(0,numImages+1,x):
-                if x <= numImages:
-                    horizStrips.append(cv2.hconcat([image.image for image in image_list[i:x]]))
-                x = x+y
-            print("\n\nDEBUG: length of horizStrips: {}\n\n".format(len(horizStrips)))
-            full = cv2.vconcat([image for image in horizStrips])
-            fullImage = cls(full)
-            fullImage.resize(horizontal= 2048)
-            return fullImage
-        else:
-            raise cerr.DumbProgramError("Can only accept even squares!")
-
-
-
-    def blur(self,*, kernel = (5,5), blur_type = 'GAUSS'):
-        '''function to encapsulate blurring activity.
-        Args:
-            kernel: size of kernel to apply blurring
-            blur_type: gaussian or average or median,
-                keywords 'GAUSS', 'AVG', 'MEDIAN'
-        '''
-        if blur_type is 'GAUSS':
-            self.image = cv2.GaussianBlur(self.image,kernel, 0)
-        elif blur_type is 'AVG':
-            self.image = cv2.blur(self.image, kernel)
-        elif blur_type is 'MEDIAN':
-            self.image = cv2.medianBlur(self.image, kernel[0])
-        else:
-            print("{} is not implemented. Blurring with Average.".format(blur_type))
-            self.image = cv2.blur(self.image, kernel)
 
     def rectangle(self, pt1,pt2, value = 120, thickness = 3):
         '''Draw a rectangle at coordinates
@@ -141,6 +102,86 @@ class Image(object):
         if imagePath is not None:
             self.imagePath = imagePath
         cv2.imwrite(self.imagePath, self.image)
+
+    def blur(self,*, kernel = (3,3), blur_type = 'GAUSS'):
+        '''function to encapsulate blurring activity.
+        Args:
+            kernel: size of kernel to apply blurring
+            blur_type: gaussian or average or median,
+                keywords 'GAUSS', 'AVG', 'MEDIAN'
+        '''
+        if blur_type is 'GAUSS':
+            self.image = cv2.GaussianBlur(self.image,kernel, 0)
+        elif blur_type is 'AVG':
+            self.image = cv2.blur(self.image, kernel)
+        elif blur_type is 'MEDIAN':
+            self.image = cv2.medianBlur(self.image, kernel[0])
+        else:
+            print("{} is not implemented. Blurring with Gauss.".format(blur_type))
+            self.image = cv2.GaussianBlur(self.image,kernel, 0)
+
+    def isolate(self, xRange, yRange):
+        '''isolate section of an image.
+        Args:
+            xRange: tuple. grabs horiz bounds,
+                i.e. 100:250
+            yRange: tuple. grabs vert bounds,
+                i.e. 100:250
+        '''
+        if len(self.image.shape) is 3:
+            return self.image[xRange[0]:xRange[1],yRange[0]:yRange[1], :]
+        else:
+            return self.image[xRange[0]:xRange[1],yRange[0]:yRange[1]]
+
+    @classmethod
+    def add_many(cls, image_list):
+        '''creates a big image from many and shows it.
+            not smart so dont make an image that is too big!
+            also not smart and can only take even swquares!
+        '''
+        numImages = len(image_list)
+        x = math.ceil(math.sqrt(numImages))
+        if x == math.sqrt(numImages):
+            y = int(x)
+            # add images together by y
+            horizStrips=[]
+            for i in range(0,numImages+1,x):
+                if x <= numImages:
+                    horizStrips.append(cv2.hconcat([image.image for image in image_list[i:x]]))
+                x = x+y
+            print("\n\nDEBUG: length of horizStrips: {}\n\n".format(len(horizStrips)))
+            full = cv2.vconcat([image for image in horizStrips])
+            fullImage = cls(full)
+            fullImage.resize(horizontal= 2048)
+            return fullImage
+        else:
+            raise cerr.DumbProgramError("Can only accept even squares!")
+
+    @classmethod
+    def show_them(cls, image_list):
+        '''will show many image objects and wait until a key is pressed.'''
+        try:
+            cv2.imshow(title, self.image)
+        except Exception as e:
+            print("error occured: {}",e)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    @classmethod
+    def open(cls,filename):
+        '''simple implementation to open a file and return an image object.
+        simplementation.
+        '''
+        try:
+            img=cv2.imread(filename)
+        except Exception as e:
+            print("{}. Filename: {}\n".format(e.message,filename))
+            raise
+        
+        image = cls(img)
+        return image
+
+
 
 class GeneratedImage(Image):
     '''images that are created. Inherits init from parent Image
@@ -215,52 +256,5 @@ class GeneratedImage(Image):
             thickness = random.randint(-10,10)
             self.rectangle(pt1,pt2,value,thickness)
 
-
-class ExtantImage(Image):
-    def __init__(self, *, imagePath=None, percentage=.25):
-        ''' initialize the underlying cv2 image object.
-        Args:
-            self: object instance
-            imagePath: path to image. must be supplied or exception will 
-            be thrown to prevent onject from initializing.
-            percentage: default percentage for image resizing. default is 25%
-        '''
-        self.imagePath = imagePath
-        self.percentage = percentage
-
-        if imagePath is None:
-            raise cerr.NoImageError("No image path provided")
-        else:
-            try: 
-                self.image = cv2.imread(imagePath)
-            except Exception as exc:
-                print("Error encountered: {}".format(exc))
-                raise
-
-    def __str__(self):
-        '''override 'str' object attribute to show some helpful info about where the image came from'''
-        ps = " Default percentage is {}%".format(self.percentage) if self.percentage else ""
-        return ("Image opened from {}.{}".format(self.imagePath,ps))
-
-    def resize(self, *, percentage = None, vertical = None, horizontal = None):
-        ''' resize image.
-        Args:
-            percentage: what percent size the image should be from the original
-            vertical: desired vertical. horizontal will be scaled.
-            horizontal: same but vis-versa
-        '''
-        h,w = cv2.shape[:2]
-
-        if vertical is not None and horizontal is not None \
-                         or vertical is not None and horizontal is None:
-            factor = vertical / h
-        elif horizontal is not None and vertical is None:
-            factor = horizontal / w
-        elif percentage is not None:
-            factor = percentage
-        else:
-            factor = self.percentage
-
-        self.image = cv2.resize(self.image,None,fx=factor, fy=factor)
 
 

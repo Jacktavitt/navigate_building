@@ -28,6 +28,13 @@ def get_font_size(text, signWidth):
     fontKey = min(chartKeyKeys, key = lambda x: abs(x-charnum))
     return sizeChart[chartKey][fontKey]
 
+def toGray(B,G,R):
+    '''converts color value to grayscale via the Limunosity method.
+    Args:
+        (B,G,R): blue, green, and red colorspace
+    '''
+    return (R*0.21 + G*0.72 + B*0.07)
+
 DOOR_HT = 80
 DOOR_WD = 32
 VEIL_HT = 120

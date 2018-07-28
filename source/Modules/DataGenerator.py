@@ -8,6 +8,7 @@ import numpy as np
 import string
 import math
 import ADA
+import HandyTools as HAT
 
 class ImageGenerator(object):
 
@@ -34,13 +35,13 @@ class ImageGenerator(object):
         else:
             self._size = size
 
-        # set background value
-        self._bgv = bgValue if bgValue is not None else 200
+        # set background value. default is beige.
+        self._bgv = bgValue if bgValue is not None else (237,245,247)
         #set random seed
         self._rands = randSeed
         random.seed(self._rands)
-        #set plaque grayscale value
-        self._pqv = plaqueValue if plaqueValue is not None else (50,50,50)
+        #set plaque grayscale value. default is maroon.
+        self._pqv = plaqueValue if plaqueValue is not None else (42,5,102)
         #set plaque size
         if plaqueSize is None:
             self._pqs = int(math.sqrt((self._size[0]*self._size[1])*0.01))
@@ -50,9 +51,9 @@ class ImageGenerator(object):
         self._font = fontFace
         #set font color, high contrast is key
         if len(self._pqv) is 3:
-            self._fontv = tuple((n+150)%255 for n in self._pqv)
+            self._fontv = tuple( HAT.hiLow255(n) for n in self._pqv)
         else:
-            self._fontv = (self._pqv+150)%255
+            self._fontv = HAT.hiLow255(self._pqv)
         #number of chars on plaque
         self._strlen = 3
         # are we doing color for these?
@@ -116,20 +117,18 @@ class ImageGenerator(object):
         # now to generate coords for the plaque
         # TODO: rn this is hardcoded. should be dynamic
         txtbx=cv2.getTextSize(txt,FONT,FSCALE,1) # get size of box bounding text
-        print("DEBUG TEXT BOX SIZE: {}".format(txtbx))
+        # print("DEBUG TEXT BOX SIZE: {}".format(txtbx))
         (wt,ht),bs = txtbx
         self._pqs = wt+30 # 10px margin around at least
-        # self._pqs = PQ_DIM
         Px1=random.randint(0,HL_WD-self._pqs)
-        # Px1= random.randint(0, (HL_WD-PQ_DIM))
         Py1= PQ_WALL_HT
         # add the plaque
-        (x,y), (Px2,Py2) = self.draw_room_sign(hallway, (Px1,Py1),self._pqs)
+        (x,y), (Px2,Py2) = self.draw_room_sign(hallway, (Px1,Py1), self._pqs)
         # add text
         self._draw_room_number(hallway, Px1, Py1+ht*2, text=txt)
         # its time for the door. will add on right if space, otherwise on left
         if Px1 < DR_WD + PQ_2_DR:
-            # not enough space on left of door
+            # not enough space on left of sign
             Dx1 = Px2 + PQ_2_DR
         else:
             Dx1 = Px1 - (DR_WD+PQ_2_DR)
@@ -137,7 +136,7 @@ class ImageGenerator(object):
         Dx2 = Dx1+DR_WD
         Dy2 = Dy1+DR_HT
         # add the door
-        self.draw_door(hallway,Dx1)
+        self.draw_door(hallway,Dx1,DW=DR_WD,DH=DR_HT)
         # a little seasoning
         hallway.salt_and_pepper()
         return hallway
@@ -164,10 +163,10 @@ class ImageGenerator(object):
         if text is None:
             text = self._gen_plaque_text()
         # cv2.putText(img, text, origin, fontFace, fontScale, color[, thickness[, lineType[, bottomLeftOrigin]]])   
-        cv2.putText(image.image, text, (x,y), self._font, FSCALE, self._fontv, 2)
+        cv2.putText(image.image, text, (x,y), self._font, FSCALE, self._fontv, 3)
         return image
 
-    def draw_door(self,image, x_coord,value=(40,40,40),*,DH=None,DW=None,CH=None):
+    def draw_door(self,image, x_coord,value=(7,30,56),*,DH=None,DW=None,CH=None):
         '''draw a door on the image.
         Args:
             DH: door height
@@ -183,7 +182,6 @@ class ImageGenerator(object):
         p1=(x_coord,(CH-DH)) # top left
         p2=(x_coord+DW,CH) # bottom right
         image.rectangle(p1,p2,value,-1)
-
 
     def _gen_plaque_text(self):
         '''Thanks to https://stackoverflow.com/a/2257449 for the text/number generation
@@ -211,10 +209,10 @@ class ImageGenerator(object):
         point2x = point1x + width
         point2y = point1y + width
         p1 = (point1x,point1y)
+        print("DEBUG point1: {}\n".format(p1))
         p2 = (point2x,point2y) 
         image.rectangle(p1,p2,self._pqv,-1)
         return p1,p2
-
 
     def make_false_image(self, num_randos=4, seasoning = 0.02, *, blur = None):
         '''generate an image without a room sign.
