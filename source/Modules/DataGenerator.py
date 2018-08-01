@@ -86,6 +86,11 @@ class ImageGenerator(object):
             Plaque height is 60" at top left corner
             plaque is 2" from door, and 7" wide/ high
             ceiling is 10'
+
+        REturns:
+            image: hallway image object
+            plaqueTL: plaque location top left coords
+            plaqueBR: plaque location bottom right coords
         '''
         if res is None:
             res = self.res
@@ -139,7 +144,7 @@ class ImageGenerator(object):
         self.draw_door(hallway,Dx1,DW=DR_WD,DH=DR_HT)
         # a little seasoning
         hallway.salt_and_pepper()
-        return hallway
+        return hallway, (x,y), (Px2,Py2)
 
     def add_stuff(self, image, stuffScale = 2):
         '''adds other shapes and lines to image

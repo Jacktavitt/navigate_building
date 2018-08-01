@@ -1,5 +1,8 @@
-"""
+r"""
 Driver for generating hallway for better training data.
+sample use: (from project root)
+python source\ImageGeneration\hall_driver.py 
+-d C:\Users\TJAMS002\Documents\ComputerScience\Thesis\RoomFinder\source\ImageGeneration\HALLWAYS\ -i 10
 """
 import DataGenerator as DAG
 import CustomImage as CIM
@@ -17,8 +20,10 @@ def main(directory,images):
     IMG_GENR = DAG.ImageGenerator(IMAGE_CLASS,plaqueSize=75, resolution=10, randSeed=42)
 
     for n in range(int(images)):
-        temp=IMG_GENR.make_hallway()
-        temp.save(imagePath=''.join([directory,'test_hallway_',str(n),'.png']))
+        temp, TL, BR =IMG_GENR.make_hallway()
+        temp.save(imagePath=''.join([directory,str(TL[0]),'_',str(TL[1]),'.',
+                                               str(BR[0]),'_',str(BR[1]),'.',
+                                               str(n),'.png']))
 
 
 if __name__=='__main__':
