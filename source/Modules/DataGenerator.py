@@ -159,7 +159,7 @@ class ImageGenerator(object):
         return image
 
     def _draw_room_number(self, image, x,y,*, FSCALE = 1, text = None):
-        '''Helper funciton. Draws room number/letter on the plaque.
+        '''Helper function. Draws room number/letter on the plaque.
             Args:
                 self: instance
                 image: image object to draw on
@@ -214,7 +214,7 @@ class ImageGenerator(object):
         point2x = point1x + width
         point2y = point1y + width
         p1 = (point1x,point1y)
-        print("DEBUG point1: {}\n".format(p1))
+        # print("DEBUG point1: {}\n".format(p1))
         p2 = (point2x,point2y) 
         image.rectangle(p1,p2,self._pqv,-1)
         return p1,p2
