@@ -1,155 +1,153 @@
 <?php
-$message = "";
-if (isset($_POST['submit_survey']) ) {
-    // include db connection
-    include "db_connect.php";
-    // initialize variables
-    $vl= $hl= $aid= $sr= $dso= $inter= $outd= $wp= $ir= $cane= $anim= $help= $attd= $lc= $li= $wa= $woa= $iex= $oex= $whlp= $app ='';
-    $vlErr= $hlErr= $aidErr= $srErr= $dsoErr= $interErr= $outdErr= $wpErr= $irErr= $caneErr= $animErr= $helpErr= $attdErr= $lcErr= $liErr= $waErr= $woaErr= $iexErr= $oexErr= $whlpErr= $appErr='';
 
-    $formElts = array($vl, $hl, $aid, $sr, $dso, $inter, $outd, $wp, $ir,
-                        $cane, $anim, $help, $attd, $lc, $li, $wa, $woa,
-                        $iex, $oex, $whlp, $app);
-    $formEltErrs = array($vlErr, $hlErr, $aidErr, $srErr, $dsoErr,
-                        $interErr, $outdErr, $wpErr, $irErr, $caneErr,
-                        $animErr, $helpErr, $attdErr, $lcErr, $liErr, 
-                        $waErr, $woaErr, $iexErr, $oexErr, $whlpErr, $appErr);
-    $cleanPost = $_POST;
-    // remove submit button element
-    array_pop($cleanPost);
-    
-    function error_check(&$var, &$varErr, $postKey, $postVar) {
-        if (empty($postVar)){
-            $varErr="Missing $postKey element";
-        } else {
-            $var = htmlspecialchars($postVar);
-        }
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // open a database connection
+    $db = new PDO("sqlite:survey.db") or die ('Cannot open database');
+
+    // the database should be set up but what the heck
+    $query = "CREATE TABLE IF NOT EXISTS survey_results (
+            response_id INTEGER PRIMARY KEY,
+            vision_level VARCHAR,
+            how_long VARCHAR,
+            aid VARCHAR,
+            screen_reader VARCHAR,
+            dso VARCHAR,
+            interiors INT,
+            outdoors INT,
+            wall_plaques INT,
+            internal_route INT,
+            cane BOOLEAN,
+            animal BOOLEAN,
+            help BOOLEAN,
+            attendance BOOLEAN,
+            lost_campus BOOLEAN,
+            lost_inside BOOLEAN,
+            with_aid VARCHAR,
+            without_aid VARCHAR,
+            inside_exp VARCHAR,
+            outside_exp VARCHAR,
+            what_help VARCHAR,
+            app_desires VARCHAR
+        )";
+    $db->exec($query);
+
+    // set blank form fields to NULL
+    $vision_level   = isset($_POST["vision_level"]) ? $_POST["vision_level"] : NULL;
+    $how_long       = isset($_POST["how_long"]) ? $_POST["how_long"] : NULL;
+    $aid            = isset($_POST["aid"]) ? $_POST["aid"] : NULL;
+    $screen_reader  = isset($_POST["screen_reader"]) ? $_POST["screen_reader"] : NULL;
+    $dso            = isset($_POST["dso"]) ? $_POST["dso"] : NULL;
+    $interiors      = isset($_POST["interiors"]) ? $_POST["interiors"] : NULL;
+    $outdoors       = isset($_POST["outdoors"]) ? $_POST["outdoors"] : NULL;
+    $wall_plaques   = isset($_POST["wall_plaques"]) ? $_POST["wall_plaques"] : NULL;
+    $internal_route = isset($_POST["internal_route"]) ? $_POST["internal_route"] : NULL;
+    $cane           = isset($_POST["cane"]) ? $_POST["cane"] : NULL;
+    $animal         = isset($_POST["animal"]) ? $_POST["animal"] : NULL;
+    $help           = isset($_POST["help"]) ? $_POST["help"] : NULL;
+    $attendance     = isset($_POST["attendance"]) ? $_POST["attendance"] : NULL;
+    $lost_campus    = isset($_POST["lost_campus"]) ? $_POST["lost_campus"] : NULL;
+    $lost_inside    = isset($_POST["lost_inside"]) ? $_POST["lost_inside"] : NULL;
+    $without_aid    = isset($_POST["without_aid"]) ? $_POST["without_aid"] : NULL;
+    $with_aid       = isset($_POST["with_aid"]) ? $_POST["with_aid"] : NULL;
+    $inside_exp     = isset($_POST["inside_exp"]) ? $_POST["inside_exp"] : NULL;
+    $outside_exp    = isset($_POST["outside_exp"]) ? $_POST["outside_exp"] : NULL;
+    $what_help      = isset($_POST["what_help"]) ? $_POST["what_help"] : NULL;
+    $app_desires    = isset($_POST["app_desires"]) ? $_POST["app_desires"] : NULL;
+    $submit_survey  = isset($_POST["submit_survey"]) ? $_POST["submit_survey"] : NULL;
+
+    // Create a prepared statement; we don't want any SQL injection
+    $prepared_stmt =
+        "INSERT INTO survey_results (vision_level, how_long, aid, screen_reader, dso, interiors, outdoors, wall_plaques, internal_route, cane, animal, help, attendance, lost_campus, lost_inside, with_aid, without_aid, inside_exp, outside_exp, what_help, app_desires)
+         VALUES ( :vision_level, :how_long, :aid, :screen_reader, :dso, :interiors, :outdoors, :wall_plaques, :internal_route, :cane, :animal, :help, :attendance, :lost_campus, :lost_inside, :with_aid, :without_aid, :inside_exp, :outside_exp, :what_help, :app_desires)";
+
+    // bind the parameters
+    $stmt = $db->prepare($prepared_stmt);
+    $stmt->bindParam(':vision_level', $vision_level);
+    $stmt->bindParam(':how_long', $how_long);
+    $stmt->bindParam(':aid', $aid);
+    $stmt->bindParam(':screen_reader', $screen_reader);
+    $stmt->bindParam(':dso', $dso);
+    $stmt->bindParam(':interiors', $interiors);
+    $stmt->bindParam(':outdoors', $outdoors);
+    $stmt->bindParam(':wall_plaques', $wall_plaques);
+    $stmt->bindParam(':internal_route', $internal_route);
+    $stmt->bindParam(':cane', $cane);
+    $stmt->bindParam(':animal', $animal);
+    $stmt->bindParam(':help', $help);
+    $stmt->bindParam(':attendance', $attendance);
+    $stmt->bindParam(':lost_campus', $lost_campus);
+    $stmt->bindParam(':lost_inside', $lost_inside);
+    $stmt->bindParam(':with_aid', $with_aid);
+    $stmt->bindParam(':without_aid', $without_aid);
+    $stmt->bindParam(':inside_exp', $inside_exp);
+    $stmt->bindParam(':outside_exp', $outside_exp);
+    $stmt->bindParam(':what_help', $what_help);
+    $stmt->bindParam(':app_desires', $app_desires);
+
+    // execute the prepared statement
+    if( $stmt->execute() ){
+        print "<h1>Thank you for submitting your survey!</h1>";
     }
-    $multiArray = array();
-    $iterator = new MultipleIterator;
-    $iterator->attachIterator(new ArrayIterator($formElts));
-    $iterator->attachIterator(new ArrayIterator($formEltErrs));
-    $iterator->attachIterator(new ArrayIterator($cleanPost));
-    foreach ($iterator as $keys => $values) {
-        error_check($values[0],$values[1], $keys[2],$values[2]);
-        // var_dump($values[0],$values[1],$keys[2],$values[2]);
-        array_push($multiArray, array($keys[2] => array($values[0], $values[1])));
-        // echo "<br>";
+    else {
+        print "Data insert failed";
     }
-    // for($ctr=0;$ctr<count($cleanPost);$ctr++){
-        // echo $formElts[$ctr].','. $formEltErrs[$ctr].','.$cleanPost[$ctr].','."<br>";
-    // } 
-    var_dump($multiArray);
-    
-
-
-    // var_dump($_POST);
-    
-	// // make query with student data
-	// $query = "INSERT INTO survey_results (
-      // vision_level ,
-      // how_long ,
-      // aid ,
-      // screen_reader ,
-      // dso ,
-      // interiors ,
-      // outdoors ,
-      // wall_plaques ,
-      // internal_route ,
-      // cane ,
-      // animal ,
-      // help ,
-      // attendance ,
-      // lost_campus ,
-      // lost_inside ,
-      // with_aid ,
-      // without_aid ,
-      // inside_exp ,
-      // outside_exp ,
-      // what_help ,
-      // app_desires) 
-      // VALUES ('$vl', '$hl', '$aid', '$sr', '$dso', '$inter', '$outd', '$wp', '$ir', '$cane', '$anim', '$help', '$attd', '$lc', '$li', '$wa', '$woa', '$iex', '$oex', '$whlp', '$app')";
-
-    // // var_dump(array_keys($_POST));
-    // // var_dump(array_values($_POST));
-    // function rayprint($v1,$v2){
-        // return $v1 .','. $v2;
-    // }
-    
-    // $keys = array_keys($_POST);
-    // $values = array_values($_POST);
-    // array_pop($keys);
-    // array_pop($values);
-    // $aa = implode(', ',$keys);
-    // $vv = implode(', ',$values);
-
-    // $smartquery="INSERT INTO survey_results($aa) VALUES ('$vv')";
-    // // echo htmlspecialchars($_SERVER["PHP_SELF"]);
-    // echo $smartquery;
-    // // $message = "Thanks";
-    	// execute query and check if success
-	// if( $db->exec($smartquery) ){
-		// $message = "data inserted success";
-	// }
-	// else {
-		// $message = "Data insert failed";
-	// }
 }
-?>
-
+else {
+    $action = htmlspecialchars($_SERVER["PHP_SELF"]);
+    // print the form
+print <<< _HTML
 <!DOCTYPE html>
 <html lang = "en">
-<head>
-  <link rel="stylesheet" href="style.css">
-  <title>Student Survey Form</title>
-</head>
-<body>
-<div><?php echo $message;?></div>
-  <h1>Hello!</h1>
+  <head>
+    <link rel="stylesheet" href="style.css">
+    <title>Student Survey Form</title>
+  </head>
+  <body>
+    <h1>Hello!</h1>
     <p>
-      Thank you for taking the time to fill out this survey.
-      This information is <em>TOTALLY ANONYMOUS</em> so please answer freely and to the best of your ability!
+    Thank you for taking the time to fill out this survey.
+    This information is <em>TOTALLY ANONYMOUS</em> so please answer freely and to the best of your ability!
     </p>
-  <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" method = "POST">
-    <fieldset>
-      <legend>
-        <h3>Background Questions</h3>
-      </legend>
+    <form name="form" onsubmit="validate()" method = "POST">
       <fieldset>
-        <div>
-          <label for="vision_level">How would you describe your level of vision?</label>
-          <input type="text" id="vision_level" name="vision_level"/>
-        </div>
-      </fieldset>
-      <fieldset>  
-        <div>
-          <label for="how_long">How long have you had a visual impairment?</label>
-          <input type="text" name="how_long" id="how_long" />
-        </div>
-      </fieldset>
-      <fieldset>
-        <div>
-          <label for="aid">What do you use to help you navigate the University?</label>
-          <input type="text" id="aid" name="aid"/>
-        </div>
-      </fieldset>
-      <fieldset>
-        <div>
-          <label for="screen_reader">If you use a screen reader, which do you prefer?</label>
-          <input type="text" name="screen_reader" id="screen_reader"/>
-        </div>
-      </fieldset>
-      <fieldset>
-        <div>
+        <legend>
+          <h2>Background Questions</h2>
+        </legend>
+        <fieldset>
+          <div>
+            <label for="vision_level">How would you describe your level of vision?</label>
+            <input value="" type="text" id="vision_level" name="vision_level" />
+          </div>
+        </fieldset>
+        <fieldset>
+          <div>
+            <label for="how_long">How long have you had a visual impairment?</label>
+            <input value="" type="text" name="how_long" id="how_long" />
+          </div>
+        </fieldset>
+        <fieldset>
+          <div>
+            <label for="aid">What do you use to help you navigate the University?</label>
+            <input value="" type="text" id="aid" name="aid"/>
+          </div>
+        </fieldset>
+        <fieldset>
+          <div>
+            <label for="screen_reader">If you use a screen reader, which do you prefer?</label>
+            <input value="" type="text" name="screen_reader" id="screen_reader"/>
+          </div>
+        </fieldset>
+        <fieldset>
+          <div>
             <label for="dso">What elements of the Disability Services Office do you use?</label>
-          <input type="text" name="dso" id="dso" />
-        </div>
+            <input value="" type="text" name="dso" id="dso" />
+          </div>
+        </fieldset>
       </fieldset>
-    </fieldset>
-    <fieldset>
-      <legend>
-        <h3>Scale Questions</h3>
-      </legend>
+      <fieldset>
+        <legend>
+          <h2>Scale Questions</h2>
+        </legend>
         <fieldset>
           <legend>What is your experience navigating the University building interiors?</legend>
           <div>
@@ -242,11 +240,11 @@ if (isset($_POST['submit_survey']) ) {
             <label for="internal_route_5">More than 66 Days</label>
           </div>
         </fieldset>
-    </fieldset>
-    <fieldset>
-      <legend>
-        <h3>Yes or No Questions</h3>
-      </legend>
+      </fieldset>
+      <fieldset>
+        <legend>
+          <h2>Yes or No Questions</h2>
+        </legend>
         <fieldset>
           <legend>Do you use a cane?</legend>
           <div>
@@ -255,7 +253,7 @@ if (isset($_POST['submit_survey']) ) {
           </div>
           <div>
             <input type="radio" name="cane" value="No" id="cane_no">
-            <label for="cane_no">No</label> 
+            <label for="cane_no">No</label>
           </div>
         </fieldset>
         <fieldset>
@@ -266,7 +264,7 @@ if (isset($_POST['submit_survey']) ) {
           </div>
           <div>
             <input type="radio" name="animal" value="No" id="animal_no">
-            <label for="animal_no">No</label> 
+            <label for="animal_no">No</label>
           </div>
         </fieldset>
         <fieldset>
@@ -277,7 +275,7 @@ if (isset($_POST['submit_survey']) ) {
           </div>
           <div>
             <input type="radio" name="help" value="No" id="help_no">
-            <label for="help_no">No</label> 
+            <label for="help_no">No</label>
           </div>
         </fieldset>
         <fieldset>
@@ -288,7 +286,7 @@ if (isset($_POST['submit_survey']) ) {
           </div>
           <div>
             <input type="radio" name="attendance" value="No" id="attendance_no">
-            <label for="attendance_no">No</label> 
+            <label for="attendance_no">No</label>
           </div>
         </fieldset>
         <fieldset>
@@ -299,7 +297,7 @@ if (isset($_POST['submit_survey']) ) {
           </div>
           <div>
             <input type="radio" name="lost_campus" value="No" id="lost_campus_no">
-            <label for="lost_campus_no">No</label> 
+            <label for="lost_campus_no">No</label>
           </div>
         </fieldset>
         <fieldset>
@@ -310,49 +308,52 @@ if (isset($_POST['submit_survey']) ) {
           </div>
           <div>
             <input type="radio" name="lost_inside" value="No" id="lost_inside_no">
-            <label for="lost_inside_no">No</label> 
+            <label for="lost_inside_no">No</label>
           </div>
         </fieldset>
-    </fieldset>
-    <fieldset>
-    <legend><h3>Open-ended Questions</h3></legend>
-      <fieldset>
-        <legend>If you are travelling without an aid or a seeing-eye dog, how do you map the trip in your mind?</legend>
-        <label for="without_aid"></label>
-        <textarea id="without_aid" name="without_aid" cols="80" rows="10"></textarea>
       </fieldset>
       <fieldset>
-        <legend>If you travel with an aid or seeing-eye dog, how do you map the trip in your mind?</legend>
-        <label for="with_aid"></label>
-        <textarea id="with_aid" name="with_aid" cols="80" rows="10"></textarea>
+        <legend><h2>Open-ended Questions</h2></legend>
+        <fieldset>
+          <legend>If you are travelling without an aid or a seeing-eye dog, how do you map the trip in your mind?</legend>
+          <label for="without_aid"></label>
+          <textarea id="without_aid" name="without_aid" cols="80" rows="10"></textarea>
+        </fieldset>
+        <fieldset>
+          <legend>If you travel with an aid or seeing-eye dog, how do you map the trip in your mind?</legend>
+          <label for="with_aid"></label>
+          <textarea id="with_aid" name="with_aid" cols="80" rows="10"></textarea>
+        </fieldset>
+        <fieldset>
+          <legend>What is your experience of the University buildings inside? How do you understand the layout? What stands out to you?</legend>
+          <label for="inside_experience"></label>
+          <textarea id="inside_experience" name="inside_exp" cols="80" rows="10"></textarea>
+        </fieldset>
+        <fieldset>
+          <legend>What is your experience of the campus outside? How do you understand the layout? What stands out to you?</legend>
+          <label for="outside_experience"></label>
+          <textarea id="outside_experience" name="outside_exp" cols="80" rows="10"></textarea>
+        </fieldset>
+        <fieldset>
+          <legend>What would you find helpful for navigating the inside of campus buildings?</legend>
+          <label for="what_helpful"></label>
+          <textarea id="what_helpful" name="what_help" cols="80" rows="10"></textarea>
+        </fieldset>
+        <fieldset>
+          <legend>If you had an app that would give you directions from your current room to another room in the building, what would you want the directions to sound like? For example, would you like the turning directions to be in terms of Left and Right and Straight, or East and West? Or some other format? What measure of distance would be most helpful? Metric ("Go ahead 5 feet"), Relative ("Take 3 paces forward"), Constant ("Six doors ahead and arrive at an exit"), or some other method? If you feel strongly, please elaborate!</legend>
+          <label for="app_desires"></label>
+          <textarea  id="app_desires" name="app_desires" cols="80" rows="10"></textarea>
+        </fieldset>
       </fieldset>
-      <fieldset> 
-        <legend>What is your experience of the University buildings inside? How do you understand the layout? What stands out to you?</legend>
-        <label for="inside_experience"></label>
-        <textarea id="inside_experience" name="inside_exp" cols="80" rows="10"></textarea>
-      </fieldset>
-      <fieldset> 
-        <legend>What is your experience of the campus outside? How do you understand the layout? What stands out to you?</legend>
-        <label for="outside_experience"></label>
-        <textarea id="outside_experience" name="outside_exp" cols="80" rows="10"></textarea>
-      </fieldset>
-      <fieldset>
-        <legend>What would you find helpful for navigating the inside of campus buildings?</legend>
-        <label for="what_helpful"></label>
-        <textarea id="what_helpful" name="what_help" cols="80" rows="10"></textarea>
-      </fieldset>
-      <fieldset>
-        <legend>If you had an app that would give you directions from your current room to another room in the building, what would you want the directions to sound like? For example, would you like the turning directions to be in terms of Left and Right and Straight, or East and West? Or some other format? What measure of distance would be most helpful? Metric ("Go ahead 5 feet"), Relative ("Take 3 paces forward"), Constant ("Six doors ahead and arrive at an exit"), or some other method? If you feel strongly, please elaborate!</legend>
-        <label for="app_desires"></label>
-        <textarea id="app_desires" name="app_desires" cols="80" rows="10"></textarea>
-      </fieldset>
-    </fieldset>
-    <table>
+      <table>
         <tr>
-            <td><input type="reset"></td>
-            <td><input type="submit" value="Submit Survey" name="submit_survey"></td>
+          <td><input type="reset"></td>
+          <td><input type="submit" value="Submit Survey" name="submit_survey"></td>
         </tr>
-    </table>
-  </form>
-</body>
+      </table>
+    </form>
+  </body>
 </html>
+_HTML;
+}
+?>
