@@ -1,0 +1,34 @@
+installed ROS melodic for ubuntu 18.04
+following tutorials from ROS.org, starting with:
+http://wiki.ros.org/catkin/Tutorials/create_a_workspace
+/home/$USER/catkin_ws
+
+now to create a package
+http://wiki.ros.org/ROS/Tutorials/CreatingPackage
+
+(in catkin_ws/src): catkin_create_pkg <package_name> [dep1][dep2][...]
+
+step back up to catkin_ws, run: catkin_make
+then: . ~/catkin_ws/devel/setup.bash
+to add the new workspace to ROS envi
+
+edit the package.xml file to be descriptive
+
+use catkin_make to build
+
+found rospy tutorial for subscribing to image:
+wiki.ros.org/rospy_tutorials/Tutorials/WritingImagePublisherSubscriber
+
+added 'usb_cam' to package by doing this:
+`cd ~/catkin_ws/src
+git clone https://github.com/bosch-ros-pkg/usb_cam.git
+cd ..
+catkin_make`
+
+then source the setup.bash file!
+
+edited usb_cam usb_cam-test.launch
+(roscd usb_cam, etc)
+changed source to /dev/video1, and vis from image_view to rqt_image_view (opencv/gtk issue?)
+
+
