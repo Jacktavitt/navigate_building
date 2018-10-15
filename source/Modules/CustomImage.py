@@ -37,6 +37,9 @@ class Image(object):
     # def __getitem__(self):
     #     '''overloaded braket to return image'''
     #     return self.image
+    def copy(self):
+        '''returns a Custom Image object identical to this one'''
+        return Image(self.image)
 
     def get_shape(self):
         '''returns numpy shape to avoid accessing image object'''
