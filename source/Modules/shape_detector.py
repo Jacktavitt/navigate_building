@@ -74,10 +74,15 @@ def readPlaque(crop):
     takes CustomImage and tries to read the text inside.
     '''
     crop.gray()
-            
+    # crop.blur()
     crop.show()
+    # crop.image = cv2.adaptiveThreshold(crop.image,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+    # ret,crop.image=cv2.threshold(crop.image,127,255,cv2.THRESH_BINARY)
+    # crop.show()
     text = pytesseract.image_to_string(crop.image)
     print('text: '+text)
+    things = pytesseract.image_to_boxes(crop.image)
+    print('things: '+things) 
 
 
     return text
