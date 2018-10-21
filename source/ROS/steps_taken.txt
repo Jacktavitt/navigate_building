@@ -63,4 +63,8 @@ http://wiki.ros.org/ROS/Tutorials/CreatingPackage
     Makefile:140: recipe for target 'all' failed
     make: *** [all] Error 2`
 
-- pausing on that for now to focus on
+- followed guide at https://stackoverflow.com/questions/49221565/unable-to-use-cv-bridge-with-ros-kinetic-and-python3
+- changed CMAKE argument to point at python3.6 library, BUT still get error.
+
+# going to try to convert image_raw to image/Compressed like this https://answers.ros.org/question/35183/compressed-image-to-image/
+- 

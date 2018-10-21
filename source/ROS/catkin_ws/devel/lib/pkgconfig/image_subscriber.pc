@@ -1,8 +1,0 @@
-prefix=/home/johnny/Documents/navigate_building/source/ROS/catkin_ws/devel
-
-Name: image_subscriber
-Description: Description of image_subscriber
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/johnny/Documents/navigate_building/source/ROS/catkin_ws/devel/lib 
-Requires: 
