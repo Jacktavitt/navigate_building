@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Custom image class wrapper to simplify image classification and parsing/ playin' around
 
 import os
@@ -12,7 +13,7 @@ class Image(object):
         can initalize and save image.
     '''
     def __init__(self, image, *, path='',fileName = 'temp',
-                 extension = '.png', copy=False, seed = 42, color = None):
+                 extension = '.png', copy=False, seed = 42, color = None, percentage = None):
         '''initializer for base image class.
         Args:
             image: cv2 image or np array
@@ -21,6 +22,7 @@ class Image(object):
             extension: filetype (default is .png)
             copy: used as token for deep copy constr
             color: let us know if we are using color or not
+            percentage: for scaling, in terms of percentage of one
         '''
         if copy:
             self.image = np.copy(image.image)
@@ -28,6 +30,7 @@ class Image(object):
             self.image = image
         self.imagePath = ''.join(path+fileName+extension)
         self.seed = seed
+        self.percentage = percentage if percentage else 1
         if self.image.shape is not 3:
             self.color=False
         else: 
@@ -66,12 +69,22 @@ class Image(object):
 
         self.image = cv2.resize(self.image,None,fx=factor, fy=factor)
 
-    def show(self, title = "image"):
+    def show(self, *, title = None):
         '''Show the image in a window. will wait for kill signal.'''
+        title = title if title else "image"
+        status = 1
         try:
             cv2.imshow(title, self.image)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+            while status > 0:
+                ks=cv2.waitKey(1000)
+                try:
+                    status = cv2.getWindowProperty(title,cv2.WND_PROP_VISIBLE)
+                except Exception as e:
+                    status = -1
+                    break
+                if ks > 0:
+                    break
+            cv2.destroyWindow(title)
         except Exception as e:
             print("error occured: {}",e)
             raise
@@ -94,15 +107,28 @@ class Image(object):
         '''
         self.image = cv2.line(self.image,pt1,pt2,value,thickness)
 
+    def thresh(self,*, type=None):
+        '''simpler handle for cv2 threshold.'''
+        if type == 'OTSU':
+            ret2,img = cv2.threshold(self.image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        elif not type:
+            ret, img = cv2.threshold(self.image,100,255,cv2.THRESH_BINARY)
+        self.image = img
+
+    def addColor(self):
+        '''make gray image BGR compatible'''
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_GRAY2BGR)
+        self.color = True
+
     def gray(self):
         '''make the image grayscale. pretty straighforward! overwrites original.'''
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         self.color = False
 
-    def save(self, imagePath = None):
+    def save(self,*, imagePath = None):
         '''Saves image to file.
         '''
-        if imagePath is not None:
+        if imagePath:
             self.imagePath = imagePath
         cv2.imwrite(self.imagePath, self.image)
 

@@ -1,0 +1,2 @@
+image_subscriber
+-DCATKIN_DEVEL_PREFIX=/home/johnny/Documents/navigate_building/source/ROS/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/johnny/Documents/navigate_building/source/ROS/catkin_ws/install -G Unix Makefiles

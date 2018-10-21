@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """OpenCV feature detectors with ros CompressedImage Topics in python.
 
 This example subscribes to a ros topic containing sensor_msgs 
@@ -24,70 +24,76 @@ import roslib
 import rospy
 
 # Ros Messages
-from sensor_msgs.msg import CompressedImage
-# We do not use cv_bridge it does not support CompressedImage in python
-# from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import CompressedImage, Image
+
+from cv_bridge import CvBridge, CvBridgeError
+
+# Plaque Detection libraries
+import CustomImage as CI
+import ShapeDetection as SD
 
 VERBOSE=False
 
 class image_feature:
 
-    def __init__(self):
+    def __init__(self, *, publishedTopic=None, subscribedTopic=None, save_date='12-31-1999'):
         '''Initialize ros publisher, ros subscriber'''
-        # topic where we publish
-        self.image_pub = rospy.Publisher("/dinkus/image/compressed",
-            CompressedImage)
-        # self.bridge = CvBridge()
+        self.publishedTopic = publishedTopic if publishedTopic else "/dinkus/image/compressed"
+        self.subscribedTopic = subscribedTopic if subscribedTopic else "usb_cam/image_raw/compressed"
+        # must find if we are looking at compressed or raw image
+        self.is_compressed = 'compressed' in self.subscribedTopic
+        self.save_date = save_date
+        if not self.is_compressed:
+            self.bridge = CvBridge()
         self.x=0
         self.y=0
+        # published Topic
+        self.image_pub = rospy.Publisher(self.publishedTopic, CompressedImage)
         # subscribed Topic
-        self.subscriber = rospy.Subscriber("/usb_cam/image_raw/compressed",
-            CompressedImage, self.callback,  queue_size = 1)
-        if VERBOSE :
-            print ("subscribed to /camera/image/compressed")
+        if self.is_compressed:
+            self.subscriber = rospy.Subscriber(self.subscribedTopic,
+                CompressedImage, self.callback, queue_size=1)
+        else:
+            self.subscriber = rospy.Subscriber(self.subscribedTopic,
+                Image, self.callback, queue_size=1)
+        if VERBOSE:
+            print(f"subscribed to {self.subscribedTopic}")
 
 
     def callback(self, ros_data):
-        '''Callback function of subscribed topic. 
+        '''Callback function of subscribed topic.
         Here images get converted and features detected'''
-        if VERBOSE :
-            print( 'received image of type: "%s"' % ros_data.format)
+        if VERBOSE:
+            print('received image of type: "%s"' % ros_data.format)
 
         #### direct conversion to CV2 ####
-        np_arr = np.fromstring(ros_data.data, np.uint8)
-        # image_np = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR)
-        image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR) # OpenCV >= 3.0:
-        
-        # #### Feature detectors using CV2 #### 
-        # # "","Grid","Pyramid" + 
-        # # "FAST","GFTT","HARRIS","MSER","ORB","SIFT","STAR","SURF"
-        # method = "GridFAST"
-        # feat_det = cv2.FeatureDetector_create(method)
+        if self.is_compressed:
+            np_arr = np.fromstring(ros_data.data, np.uint8)
+            image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        else:
+            try:
+            # bridge = CvBridge()
+                image_np = self.bridge.imgmsg_to_cv2(ros_data, desired_encoding="passthrough")
+            except Exception as e:
+                print(e)
+                raise
+                sys.exit(1)
+
         time1 = time.time()
-
-        # # convert np image to grayscale
-        # featPoints = feat_det.detect(
-        #     cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY))
-        time2 = time.time()
-        # if VERBOSE :
-        #     print ('%s detector found: %s points in: %s sec.'%(method,
-        #         len(featPoints),time2-time1))
-
-        # for featpoint in featPoints:
-        #     x,y = featpoint.pt
-        #     cv2.circle(image_np,(int(x),int(y)), 3, (0,0,255), -1)
-        # cv2.circle(image_np, (int(self.x),int(self.y)),10, (0,125,255), -1)
-        # image_np=cv2.Sobel(image_np,cv2.CV_64F,1,0,ksize=5)
-        image_np=cv2.Sobel(image_np,cv2.CV_64F,0,1,ksize=3)
-        
+        image_np = SD.markPlaque(CI.Image(image_np), 0.11, 3737, _save=f'{self.save_date}_bagrun_{time1}')
+        # print(image_np)
         cv2.imshow('cv_img', image_np)
         cv2.waitKey(2)
 
         #### Create CompressedIamge ####
-        msg = CompressedImage()
+        if self.is_compressed:
+            msg = CompressedImage()
+            msg.format = "jpeg"
+            msg.data = np.array(cv2.imencode('.jpg',  image_np)[1]).tostring()
+        else:
+            msg = self.bridge.cv2_to_imgmsg(image_np, encoding="passthrough")
         # msg.header.stamp = rospy.Time.now()
-        msg.format = "jpeg"
-        msg.data = np.array(cv2.imencode('.jpg', image_np)[1]).tostring()
+        
         # Publish new image
         self.image_pub.publish(msg)
         
@@ -96,11 +102,17 @@ class image_feature:
 def main(args):
     '''Initializes and cleanup ros node'''
     rospy.init_node('image_feature', anonymous=True)
-    ic = image_feature()
+    print(args)
+    if len(args) is 4:
+        ic = image_feature(subscribedTopic=args[1], publishedTopic=args[2], save_date=args[3])
+    elif len(args) is 3:
+        ic = image_feature(subscribedTopic=args[1], publishedTopic=args[2])
+    else:
+        ic = image_feature()
     try:
         rospy.spin()
-    except KeyboardInterrupt:
-        print( "Shutting down ROS Image feature detector module")
+    except Exception as e:
+        print(f"exception occured: {e}\nExiting.")
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':

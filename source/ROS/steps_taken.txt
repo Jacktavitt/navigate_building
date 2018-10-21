@@ -32,3 +32,35 @@ edited usb_cam usb_cam-test.launch
 changed source to /dev/video1, and vis from image_view to rqt_image_view (opencv/gtk issue?)
 
 
+## TO GET WORKING IN BAG SPACE ##
+- roscore (start core service)
+- cd ros_bags/navigate_building/
+    rosbag play <bag> (play bag)
+- python3 <script> <subscribe topic> <publish topic> (interact with bag)
+
+
+# 10-21 - had issue converting image_raw to cv2, https://github.com/erlerobot/gym-gazebo/issues/93
+- trying to put it all in a package
+http://wiki.ros.org/catkin/Tutorials/create_a_workspace
+http://wiki.ros.org/ROS/Tutorials/CreatingPackage
+
+# turns out cv_boost doesnt work with python3.
+- attempted to compile with python 3 instead of 2, hitting error:
+    [ 66%] Building CXX object src/CMakeFiles/cv_bridge_boost.dir/module.cpp.o
+   `In file included from /usr/include/boost/python/detail/prefix.hpp:13:0,
+                    from /usr/include/boost/python/args.hpp:8,
+                    from /usr/include/boost/python.hpp:11,
+                    from /home/johnny/vision_opencv/cv_bridge/src/module.hpp:21,
+                    from /home/johnny/vision_opencv/cv_bridge/src/module.cpp:35:
+    /usr/include/boost/python/detail/wrap_python.hpp:50:11: fatal error: pyconfig.h: No such file or directory
+    # include <pyconfig.h>
+            ^~~~~~~~~~~~
+    compilation terminated.
+    src/CMakeFiles/cv_bridge_boost.dir/build.make:62: recipe for target 'src/CMakeFiles/cv_bridge_boost.dir/module.cpp.o' failed
+    make[2]: *** [src/CMakeFiles/cv_bridge_boost.dir/module.cpp.o] Error 1
+    CMakeFiles/Makefile2:930: recipe for target 'src/CMakeFiles/cv_bridge_boost.dir/all' failed
+    make[1]: *** [src/CMakeFiles/cv_bridge_boost.dir/all] Error 2
+    Makefile:140: recipe for target 'all' failed
+    make: *** [all] Error 2`
+
+- pausing on that for now to focus on
