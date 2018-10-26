@@ -2,7 +2,7 @@ import CustomImage as CIM
 import cv2
 import numpy as np
 from argparse import ArgumentParser
-from shape_detector import markPlaque
+from ShapeDetection import markPlaque
 '''
 based on blog post by https://www.pyimagesearch.com/about/
 '''

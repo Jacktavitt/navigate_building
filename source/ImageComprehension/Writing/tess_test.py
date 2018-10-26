@@ -1,12 +1,26 @@
 from PIL import Image
+import sys
+import os
 import cv2
-import CustomImage as CIM
+import CustomImage as CI
+import ShapeDetection as SD
 import pytesseract
 
-image = CIM.Image.open(r"C:\Users\TJAMS002\Documents\ComputerScience\Thesis\RoomFinder\source\ImageGeneration\SNAPS\test_hallway_2_25p_10.png")
-image.gray()
-# image.blur()
-image.show()
 
-text=pytesseract.image_to_string(image.image)
-print(text)
+def main(args):
+    # directory = os.fsencode(args[1])
+    for fil in os.listdir(args[1]):
+        # print(fil)
+        filename = args[1] + fil
+        image = CI.Image.open(str(filename))
+        text = SD.readPlaque(image)
+        if text:
+            print(f"text: {text}\nfile: {fil}")
+            image.show()
+        # print(text)
+
+    # text=pytesseract.image_to_string(image.image)
+    # print(text)
+
+if __name__ == '__main__':
+    main(sys.argv)

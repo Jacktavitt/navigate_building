@@ -1,6 +1,7 @@
 # Byte-compiled files
 # ignore all pycashes in the source/ directory and any of its subdirectories
 source/**/__pycache__/
+source/**/catkin**
 __pycache__
 #no vscode stuff either
 *.vscode

@@ -10,7 +10,9 @@ __author__ =  'Simon Haller <simon.haller at uibk.ac.at>'
 __version__=  '0.1'
 __license__ = 'BSD'
 # Python libs
-import sys, time
+import sys
+import time
+import datetime
 
 # numpy and scipy
 import numpy as np
@@ -36,28 +38,31 @@ VERBOSE=False
 
 class image_feature:
 
-    def __init__(self, *, publishedTopic=None, subscribedTopic=None, save_date='12-31-1999'):
+    def __init__(self, *, published_topic=None, subscribed_topic=None, good_ht=None, good_w=None, debug_mode=None):
         '''Initialize ros publisher, ros subscriber'''
-        self.publishedTopic = publishedTopic if publishedTopic else "/dinkus/image/compressed"
-        self.subscribedTopic = subscribedTopic if subscribedTopic else "usb_cam/image_raw/compressed"
+        self.published_topic = published_topic if published_topic else "/dinkus/image/compressed"
+        self.subscribed_topic = subscribed_topic if subscribed_topic else "usb_cam/image_raw/compressed"
         # must find if we are looking at compressed or raw image
-        self.is_compressed = 'compressed' in self.subscribedTopic
-        self.save_date = save_date
-        if not self.is_compressed:
-            self.bridge = CvBridge()
+        # self.is_compressed = 'compressed' in self.subscribed_topic
+        self.save_date = datetime.date.today()
+        # if not self.is_compressed:
+        #     self.bridge = CvBridge()
+        self.good_ht = good_ht
+        self.good_wd = good_w
         self.x=0
         self.y=0
+        self.debug_mode = debug_mode
         # published Topic
-        self.image_pub = rospy.Publisher(self.publishedTopic, CompressedImage)
+        self.image_pub = rospy.Publisher(self.published_topic, CompressedImage)
         # subscribed Topic
-        if self.is_compressed:
-            self.subscriber = rospy.Subscriber(self.subscribedTopic,
+        # if self.is_compressed:
+        self.subscriber = rospy.Subscriber(self.subscribed_topic,
                 CompressedImage, self.callback, queue_size=1)
-        else:
-            self.subscriber = rospy.Subscriber(self.subscribedTopic,
-                Image, self.callback, queue_size=1)
+        # else:
+        #     self.subscriber = rospy.Subscriber(self.subscribed_topic,
+        #         Image, self.callback, queue_size=1)
         if VERBOSE:
-            print(f"subscribed to {self.subscribedTopic}")
+            print(f"subscribed to {self.subscribed_topic}")
 
 
     def callback(self, ros_data):
@@ -67,31 +72,36 @@ class image_feature:
             print('received image of type: "%s"' % ros_data.format)
 
         #### direct conversion to CV2 ####
-        if self.is_compressed:
-            np_arr = np.fromstring(ros_data.data, np.uint8)
-            image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        else:
-            try:
-            # bridge = CvBridge()
-                image_np = self.bridge.imgmsg_to_cv2(ros_data, desired_encoding="passthrough")
-            except Exception as e:
-                print(e)
-                raise
-                sys.exit(1)
+        # if self.is_compressed:
+        np_arr = np.fromstring(ros_data.data, np.uint8)
+        image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        # else:
+        #     try:
+        #     # bridge = CvBridge()
+        #         image_np = self.bridge.imgmsg_to_cv2(ros_data, desired_encoding="passthrough")
+        #     except Exception as e:
+        #         print(e)
+        #         raise
+        #         sys.exit(1)
 
         time1 = time.time()
-        image_np = SD.markPlaque(CI.Image(image_np), 0.11, 3737, _save=f'{self.save_date}_bagrun_{time1}')
+        image_np = SD.markPlaque(CI.Image(image_np),
+                                 good_ht=self.good_ht,
+                                 good_wd=self.good_wd,
+                                 _save=f'/home/johnny/Documents/thesis_images/crops/multi_thresh/{self.save_date}_bagrun_{time1}',
+                                 _debug_mode=self.debug_mode,
+                                 do_crop=True)
         # print(image_np)
         cv2.imshow('cv_img', image_np)
         cv2.waitKey(2)
 
         #### Create CompressedIamge ####
-        if self.is_compressed:
-            msg = CompressedImage()
-            msg.format = "jpeg"
-            msg.data = np.array(cv2.imencode('.jpg',  image_np)[1]).tostring()
-        else:
-            msg = self.bridge.cv2_to_imgmsg(image_np, encoding="passthrough")
+        # if self.is_compressed:
+        msg = CompressedImage()
+        msg.format = "jpeg"
+        msg.data = np.array(cv2.imencode('.jpg', image_np)[1]).tostring()
+        # else:
+        #     msg = self.bridge.cv2_to_imgmsg(image_np, encoding="passthrough")
         # msg.header.stamp = rospy.Time.now()
         
         # Publish new image
@@ -99,21 +109,44 @@ class image_feature:
         
         #self.subscriber.unregister()
 
-def main(args):
-    '''Initializes and cleanup ros node'''
+def main(calib_img, sub, pub, debug):
+    '''
+    calibrate plaque finder with initial image
+    requires human intervention
+    '''
+    # calibrate image to get proper area range and ratio
+        # ['label']
+        # ['contour']
+        # ['contour_area'], (['contour_w'], ['contour_h']) = drawSingleContour(image.image, contour)
+        # ['minred_area'], mrwh = drawSingleMinRec(image.image, contour)
+        # ['ratio']
+    good_boy = SD.calibratePlaque(calib_img)
+    good_height = good_boy['contour_h']
+    good_width = good_boy['contour_w']
+
+    
+    # Initializes and cleanup ros node
     rospy.init_node('image_feature', anonymous=True)
-    print(args)
-    if len(args) is 4:
-        ic = image_feature(subscribedTopic=args[1], publishedTopic=args[2], save_date=args[3])
-    elif len(args) is 3:
-        ic = image_feature(subscribedTopic=args[1], publishedTopic=args[2])
-    else:
-        ic = image_feature()
+    
+    ic = image_feature(subscribed_topic=sub,
+                       published_topic=pub,
+                       good_ht=good_height,
+                       good_w=good_width,
+                       debug_mode=debug)
+
     try:
         rospy.spin()
     except Exception as e:
         print(f"exception occured: {e}\nExiting.")
+
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    main(sys.argv)
+    if len(sys.argv) < 4:
+        print('usage: <calibration image> <subscibing topic> <publishing topic>')
+        sys.exit(1)
+    elif len(sys.argv) == 5:
+        debug = True
+    else:
+        debug = False
+    main(sys.argv[1], sys.argv[2], sys.argv[3], debug)

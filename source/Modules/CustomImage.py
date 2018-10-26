@@ -12,8 +12,8 @@ class Image(object):
     '''Base class for custom images. Trying hand at pythonic polymorphism.
         can initalize and save image.
     '''
-    def __init__(self, image, *, path='',fileName = 'temp',
-                 extension = '.png', copy=False, seed = 42, color = None, percentage = None):
+    def __init__(self, image, *, path=None, fileName=None,
+                 extension=None, copy=False, seed=42, color=None, percentage=None):
         '''initializer for base image class.
         Args:
             image: cv2 image or np array
@@ -24,38 +24,57 @@ class Image(object):
             color: let us know if we are using color or not
             percentage: for scaling, in terms of percentage of one
         '''
-        if copy:
+        if isinstance(image, Image) or copy:
             self.image = np.copy(image.image)
+        elif isinstance(image, str):
+            # TODO: fix path and filename stuff
+            self.file_name = image
+            self.image = cv2.imread(self.file_name)
         else:
             self.image = image
-        self.imagePath = ''.join(path+fileName+extension)
+
+        self.path = '' if not path else path
+        self.file_name = 'temp' if not fileName else fileName
+        self.extension = 'png' if not extension else extension
+        self.image_path = ''.join(self.path + self.file_name + '.' + self.extension)
         self.seed = seed
         self.percentage = percentage if percentage else 1
-        if self.image.shape is not 3:
-            self.color=False
-        else: 
-            self.color=True
-        # random.seed(self.seed)
 
-    # def __getitem__(self):
-    #     '''overloaded braket to return image'''
-    #     return self.image
+        self.shape = self.image.shape
+        self.height = self.shape[0]
+        self.width = self.shape[1]
+        self.dimensions = 0 if len(self.shape) < 3 else self.shape[2]
+
+        if self.dimensions is not 3:
+            self.color = False
+        else:
+            self.color = True
+
     def copy(self):
         '''returns a Custom Image object identical to this one'''
         return Image(self.image)
 
-    def get_shape(self):
-        '''returns numpy shape to avoid accessing image object'''
-        return self.image.shape
+    def get_size(self):
+        '''returns size (height, width, dimensions) of the image'''
+        return (self.height, self.width, self.dimensions)
 
-    def resize(self, *, percentage = None, vertical = None, horizontal = None):
+    def get_width(self):
+        return self.width
+
+    def get_height(self):
+        return self.height
+
+    def get_dimensions(self):
+        return self.dimensions
+
+    def resize(self, *, percentage=None, vertical=None, horizontal=None):
         ''' resize image.
         Args:
             percentage: what percent size the image should be from the original
             vertical: desired vertical. horizontal will be scaled.
             horizontal: same but vis-versa
         '''
-        h,w = self.image.shape[:2]
+        h, w = self.image.shape[:2]
 
         if vertical is not None and horizontal is not None \
                          or vertical is not None and horizontal is None:
@@ -107,12 +126,12 @@ class Image(object):
         '''
         self.image = cv2.line(self.image,pt1,pt2,value,thickness)
 
-    def thresh(self,*, type=None):
+    def thresh(self,*, type=None, thresh_num=170):
         '''simpler handle for cv2 threshold.'''
         if type == 'OTSU':
             ret2,img = cv2.threshold(self.image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         elif not type:
-            ret, img = cv2.threshold(self.image,100,255,cv2.THRESH_BINARY)
+            ret, img = cv2.threshold(self.image, thresh_num, 255, cv2.THRESH_BINARY)
         self.image = img
 
     def addColor(self):
@@ -125,14 +144,14 @@ class Image(object):
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         self.color = False
 
-    def save(self,*, imagePath = None):
+    def save(self, *, file_path=None, file_name=None, ):
         '''Saves image to file.
         '''
-        if imagePath:
-            self.imagePath = imagePath
-        cv2.imwrite(self.imagePath, self.image)
+        if file_path:
+            self.image_path = file_path
+        cv2.imwrite(self.image_path, self.image)
 
-    def blur(self,*, kernel = (3,3), blur_type = 'GAUSS'):
+    def blur(self, *, kernel=(3, 3), blur_type='GAUSS'):
         '''function to encapsulate blurring activity.
         Args:
             kernel: size of kernel to apply blurring
@@ -140,14 +159,14 @@ class Image(object):
                 keywords 'GAUSS', 'AVG', 'MEDIAN'
         '''
         if blur_type is 'GAUSS':
-            self.image = cv2.GaussianBlur(self.image,kernel, 0)
+            self.image = cv2.GaussianBlur(self.image, kernel, 0)
         elif blur_type is 'AVG':
             self.image = cv2.blur(self.image, kernel)
         elif blur_type is 'MEDIAN':
             self.image = cv2.medianBlur(self.image, kernel[0])
         else:
             print("{} is not implemented. Blurring with Gauss.".format(blur_type))
-            self.image = cv2.GaussianBlur(self.image,kernel, 0)
+            self.image = cv2.GaussianBlur(self.image, kernel, 0)
 
     def isolate(self, xRange, yRange):
         '''isolate section of an image.
@@ -158,9 +177,9 @@ class Image(object):
                 i.e. 100:250
         '''
         if len(self.image.shape) is 3:
-            return self.image[xRange[0]:xRange[1],yRange[0]:yRange[1], :]
+            return self.image[xRange[0]:xRange[1], yRange[0]:yRange[1], :]
         else:
-            return self.image[xRange[0]:xRange[1],yRange[0]:yRange[1]]
+            return self.image[xRange[0]:xRange[1], yRange[0]:yRange[1]]
 
     @classmethod
     def add_many(cls, image_list):
@@ -173,8 +192,8 @@ class Image(object):
         if x == math.sqrt(numImages):
             y = int(x)
             # add images together by y
-            horizStrips=[]
-            for i in range(0,numImages+1,x):
+            horizStrips = []
+            for i in range(0, numImages+1, x):
                 if x <= numImages:
                     horizStrips.append(cv2.hconcat([image.image for image in image_list[i:x]]))
                 x = x+y
@@ -186,25 +205,25 @@ class Image(object):
         else:
             raise cerr.DumbProgramError("Can only accept even squares!")
 
-    @classmethod
-    def show_them(cls, image_list):
-        '''will show many image objects and wait until a key is pressed.'''
-        try:
-            cv2.imshow(title, self.image)
-        except Exception as e:
-            print("error occured: {}",e)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+    # @classmethod
+    # def show_them(cls, image_list):
+    #     '''will show many image objects and wait until a key is pressed.'''
+    #     try:
+    #         cv2.imshow(title, self.image)
+    #     except Exception as e:
+    #         print(f"error occured: {e}")
+    #     cv2.waitKey(0)
+    #     cv2.destroyAllWindows()
 
     @classmethod
-    def open(cls,filename):
+    def open(cls, filename):
         '''simple implementation to open a file and return an image object.
         simplementation.
         '''
         try:
-            img=cv2.imread(filename)
+            img = cv2.imread(filename)
         except Exception as e:
-            print("{}. Filename: {}\n".format(e.message,filename))
+            print(f"{e}. Filename: {filename}\n")
             raise
         
         image = cls(img)

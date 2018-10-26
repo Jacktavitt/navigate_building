@@ -67,4 +67,32 @@ http://wiki.ros.org/ROS/Tutorials/CreatingPackage
 - changed CMAKE argument to point at python3.6 library, BUT still get error.
 
 # going to try to convert image_raw to image/Compressed like this https://answers.ros.org/question/35183/compressed-image-to-image/
-- 
+- rosrun image_transport republish raw in:=/image_raw compressed out:=/image
+- it works! Now back to reading the plaques.
+
+# for the initial choice of plaque, using tkinter to provide a GUI 
+- tkinter image https://stackoverflow.com/questions/23901168/how-do-i-insert-a-jpeg-image-into-a-python-tkinter-window
+- tkinter radio button https://www.python-course.eu/tkinter_radiobuttons.php
+- idea is to find contours in a calibration image, use the array ( or dicitonary) of contours to provide the USER
+    with a few choices, and the one that is picked is set as the ur-plaque.
+    - if none of the contours are of the plaque, the threshold tipping point is changed and try again. (currently set at ~170)
+    https://stackoverflow.com/questions/41504375/numpy-matrix-to-tkinter-canvas
+    - https://stackoverflow.com/questions/46284901/how-do-i-resize-buttons-in-pixels-tkinter to size things correctly
+
+
+# 10-23-18 going through, got it mostly working but some plaques are not showing up
+- adding a debug mode to show thresheld image
+- some of the hallway is too dark. added threshold customixzation to CI thresh(), not perfect though.
+    - maybe better camera?
+    - upon taking to advr, going to run sobel or laplacian before thresholding and getting contours.
+    https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_imgproc/py_gradients/py_gradients.html
+
+
+# 10-25-18 trying to grab lost plaques
+- monkeying with setting on contour kernel, opening and closing, etc
+- double-processing each image (or tripel) with differnt threshold values
+    - actually grabs a few more, still missing 254
+
+- back to text reading
+    - have pytesseract installed, but not tesseract ocr
+        - sudo apt-get install tesseract-ocr
