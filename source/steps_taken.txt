@@ -1,0 +1,126 @@
+installed ROS melodic for ubuntu 18.04
+following tutorials from ROS.org, starting with:
+http://wiki.ros.org/catkin/Tutorials/create_a_workspace
+/home/$USER/catkin_ws
+
+now to create a package
+http://wiki.ros.org/ROS/Tutorials/CreatingPackage
+
+(in catkin_ws/src): catkin_create_pkg <package_name> [dep1][dep2][...]
+
+step back up to catkin_ws, run: catkin_make
+then: . ~/catkin_ws/devel/setup.bash
+to add the new workspace to ROS envi
+
+edit the package.xml file to be descriptive
+
+use catkin_make to build
+
+found rospy tutorial for subscribing to image:
+wiki.ros.org/rospy_tutorials/Tutorials/WritingImagePublisherSubscriber
+
+added 'usb_cam' to package by doing this:
+`cd ~/catkin_ws/src
+git clone https://github.com/bosch-ros-pkg/usb_cam.git
+cd ..
+catkin_make`
+
+then source the setup.bash file!
+
+edited usb_cam usb_cam-test.launch
+(roscd usb_cam, etc)
+changed source to /dev/video1, and vis from image_view to rqt_image_view (opencv/gtk issue?)
+
+
+## TO GET WORKING IN BAG SPACE ##
+- roscore (start core service)
+- cd ros_bags/navigate_building/
+    rosbag play <bag> (play bag)
+- python3 <script> <subscribe topic> <publish topic> (interact with bag)
+
+
+# 10-21 - had issue converting image_raw to cv2, https://github.com/erlerobot/gym-gazebo/issues/93
+- trying to put it all in a package
+http://wiki.ros.org/catkin/Tutorials/create_a_workspace
+http://wiki.ros.org/ROS/Tutorials/CreatingPackage
+
+# turns out cv_boost doesnt work with python3.
+- attempted to compile with python 3 instead of 2, hitting error:
+    [ 66%] Building CXX object src/CMakeFiles/cv_bridge_boost.dir/module.cpp.o
+   `In file included from /usr/include/boost/python/detail/prefix.hpp:13:0,
+                    from /usr/include/boost/python/args.hpp:8,
+                    from /usr/include/boost/python.hpp:11,
+                    from /home/johnny/vision_opencv/cv_bridge/src/module.hpp:21,
+                    from /home/johnny/vision_opencv/cv_bridge/src/module.cpp:35:
+    /usr/include/boost/python/detail/wrap_python.hpp:50:11: fatal error: pyconfig.h: No such file or directory
+    # include <pyconfig.h>
+            ^~~~~~~~~~~~
+    compilation terminated.
+    src/CMakeFiles/cv_bridge_boost.dir/build.make:62: recipe for target 'src/CMakeFiles/cv_bridge_boost.dir/module.cpp.o' failed
+    make[2]: *** [src/CMakeFiles/cv_bridge_boost.dir/module.cpp.o] Error 1
+    CMakeFiles/Makefile2:930: recipe for target 'src/CMakeFiles/cv_bridge_boost.dir/all' failed
+    make[1]: *** [src/CMakeFiles/cv_bridge_boost.dir/all] Error 2
+    Makefile:140: recipe for target 'all' failed
+    make: *** [all] Error 2`
+
+- followed guide at https://stackoverflow.com/questions/49221565/unable-to-use-cv-bridge-with-ros-kinetic-and-python3
+- changed CMAKE argument to point at python3.6 library, BUT still get error.
+
+# going to try to convert image_raw to image/Compressed like this https://answers.ros.org/question/35183/compressed-image-to-image/
+- rosrun image_transport republish raw in:=/image_raw compressed out:=/image
+- it works! Now back to reading the plaques.
+
+# for the initial choice of plaque, using tkinter to provide a GUI 
+- tkinter image https://stackoverflow.com/questions/23901168/how-do-i-insert-a-jpeg-image-into-a-python-tkinter-window
+- tkinter radio button https://www.python-course.eu/tkinter_radiobuttons.php
+- idea is to find contours in a calibration image, use the array ( or dicitonary) of contours to provide the USER
+    with a few choices, and the one that is picked is set as the ur-plaque.
+    - if none of the contours are of the plaque, the threshold tipping point is changed and try again. (currently set at ~170)
+    https://stackoverflow.com/questions/41504375/numpy-matrix-to-tkinter-canvas
+    - https://stackoverflow.com/questions/46284901/how-do-i-resize-buttons-in-pixels-tkinter to size things correctly
+
+
+# 10-23-18 going through, got it mostly working but some plaques are not showing up
+- adding a debug mode to show thresheld image
+- some of the hallway is too dark. added threshold customixzation to CI thresh(), not perfect though.
+    - maybe better camera?
+    - upon taking to advr, going to run sobel or laplacian before thresholding and getting contours.
+    https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_imgproc/py_gradients/py_gradients.html
+
+
+# 10-25-18 trying to grab lost plaques
+- monkeying with setting on contour kernel, opening and closing, etc
+- double-processing each image (or tripel) with differnt threshold values
+    - actually grabs a few more, still missing 254
+
+
+# 10-31-18 working on building neural net for plaque-finding,
+- based on excellent https://www.pyimagesearch.com/2017/12/04/how-to-create-a-deep-learning-dataset-using-google-images/
+- grabbed images of ada signs, images of nulletin boards, and images of hallways
+- plan to try with just images as good set and then halls and bulletin boards os bad set 
+    - better would be to grab plaques from images in good test set and paste them into the hallway images
+    - could use this with the images i generated earlier
+- after download will train and evaluate as I work on map creation.
+! Using this link: https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html
+    - will combine this with my image generation
+    - grabbing images with staris, exitsd, numbers, office signs to increase those found
+    - also going through other datasets to remove bad ones (that have plaques) and dropping them into the good plaque folder
+# use image hash to prevent collisions/ wed out identical images?
+- https://www.pyimagesearch.com/2017/11/27/image-hashing-opencv-python/
+    - in interest of time will probably do something more simple
+
+* kinda neat, python builtin https://www.tutorialspoint.com/python/string_endswith.htm
+* where i got the reflective border info: https://docs.opencv.org/3.1.0/d3/df2/tutorial_py_basic_ops.html
+
+# 11-1-18 training day
+- caut-and-paste of keras model
+- stupid question: once model is trained, how do i USE IT?
+    - https://stackoverflow.com/questions/35074549/how-to-load-a-model-from-an-hdf5-file-in-keras
+    - https://keras.io/applications/
+    * from keras.models import load_model
+    * model = load_model('model.h5')
+    https://mail.google.com/mail/u/0/#inbox|https://www.google.com/search?num=50&client=firefox-b-1-ab&ei=1cTZW8mbIpCr8APq_aPoAQ&q=character+recognition+using+keras+and+python3&oq=character+recognition+using+keras+and+python3&gs_l=psy-ab.3...27673.28163..28428...0.0..0.182.607.2j3......0....1..gws-wiz.......0i71.zF9PljcI8Jw|http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/|https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html|https://keras.io/models/about-keras-models/|https://curl.haxx.se/|https://gist.githubusercontent.com/fchollet/0830affa1f7f19fd47b06d4cf89ed44d/raw/47d3e33764c902ed33a64f35f5f68d911de05d8d/classifier_from_little_data_script_1.py|https://stackoverflow.com/questions/35074549/how-to-load-a-model-from-an-hdf5-file-in-keras|https://keras.io/applications/|https://keras.io/preprocessing/image/#image-preprocessing|https://www.thewindowsclub.com/copy-urls-open-tabs-firefox-chrome
+
+- back to text reading
+    - have pytesseract installed, but not tesseract ocr
+        - sudo apt-get install tesseract-ocr
