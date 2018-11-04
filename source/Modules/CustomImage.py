@@ -76,9 +76,11 @@ class Image(object):
         '''
         h, w = self.image.shape[:2]
 
-        if vertical is not None and horizontal is not None \
-                         or vertical is not None and horizontal is None:
+        if vertical is not None and horizontal is None:
             factor = vertical / h
+        elif vertical is not None and horizontal is not None:
+            self.image = cv2.resize(self.image, (vertical,horizontal), interpolation=cv2.INTER_AREA)
+            return
         elif horizontal is not None and vertical is None:
             factor = horizontal / w
         elif percentage is not None:
