@@ -124,3 +124,11 @@ http://wiki.ros.org/ROS/Tutorials/CreatingPackage
 - back to text reading
     - have pytesseract installed, but not tesseract ocr
         - sudo apt-get install tesseract-ocr
+
+
+# 11-4-18 try number two
+- the results of running my trained network were ... not useful.
+- going to use https://www.pyimagesearch.com/2017/12/11/image-classification-with-keras-and-deep-learning/
+    - in conjucntion with the keras tutorial to hopefully learn how it works.
+    - following this toturial and running against my dataset from google
+    
