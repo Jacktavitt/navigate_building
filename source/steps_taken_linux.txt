@@ -1,0 +1,29 @@
+# 11-5-18 Time to redo the directions part
+- must reconfigure how directions will be generated since I will not have any metric
+    information about the hallway structure
+- room/node infomation will be coming in a linear fashion, i.e.
+
+___ 250 ___ 252 ___ 254 ... 264 ___ EXIT ___ 265 ___ 263 ... 251 ___ EXIT ___ 250
+
+    so, rooms across from eachother in the hallway will not have a realtion to eachother
+    unless one could assume that the number immediately before an even number
+    (i.e., 250 and 249) are across from eachother.
+- a hallway entity will be complete when a loop is closed ('250' is found twice, as above)
+- each node marked as an EXIT (exits, stairs, etc) will have a list of rooms in the hallway (??)
+- in order to build a "Map" (using a dict of adjacency list) only the room before and
+    after will be known. This will not be an issu unless the origin and destination
+    are in the same hallway.
+- for generating directions, the "origin" and "destination" rooms will be treated
+    as "EXITS" as well as any exits.
+    - initially, hallways that do not conform to a simple box shape ( exit at either end, no intersections)
+        will not be used.
+    
+- MUST figure a way to identify exits so hallways can be joined.
+    - this is a KEY ITEM for an acceptable iteration of a finished thesis
+    - each hallway entity will have a set of room identfiers
+        - if either room adjacent to an EXIT is one more or less than either room
+            adjacent to another EXIT, it is the same exit (??)
+        - the adjacency lists are then joined ... 
+
+# SAMPLE ADJ LIST
+rmlist =  
