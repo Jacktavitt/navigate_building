@@ -1,4 +1,4 @@
-# Dude, where's my class?
+# How do you get to class when you can't see?
 This is my sketch for a direction-generating system for ADA-compliant buildings. The goal is to provide a simple interface to people with visual impairment that will provide them with human-comprehensible, non-metric (i.e., 'Go straight 4 doors, then turn left' instead of 'Proceed 23 meters, then turn west') directions to help them get to where they need to be.
 
 It is (generally) divided into 3 parts:
