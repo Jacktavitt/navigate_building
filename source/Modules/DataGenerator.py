@@ -158,7 +158,11 @@ class ImageGenerator(object):
                             num_recs = stuffScale)
         return image
 
-    def _draw_room_number(self, image, x,y,*, FSCALE = 1, text = None):
+
+
+        
+
+    def _draw_room_number(self, image, x, y, *, FSCALE = 1, text = None):
         '''Helper function. Draws room number/letter on the plaque.
             Args:
                 self: instance

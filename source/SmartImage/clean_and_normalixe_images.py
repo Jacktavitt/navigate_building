@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 import os
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--source_directory", required=True,
         help="directory containing images")

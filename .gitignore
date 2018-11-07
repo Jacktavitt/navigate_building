@@ -11,5 +11,8 @@ __pycache__
 /images/drive-download-20180409T175248Z-001.zip
 *.jpg
 *.JPG
-images/
+source/**/data/
+source/**/images/
 *.png
+source/**/nn_data/
+*.model
