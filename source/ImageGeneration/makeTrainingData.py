@@ -11,6 +11,13 @@ import random
 from argparse import ArgumentParser
 
 
+def main(args):
+    ''' creates n-many images, with each image having a different random seed'''
+    true_directory = args.true_directory
+    false_directory = args.false_directory
+    seed = args.seed
+    images = args.images
+    noise = args.noise
 
 
 def main(directory, seed, images, noise):

@@ -284,7 +284,8 @@ class GeneratedImage(Image):
             thickness = random.randint(1,10)
             self.line(pt1,pt2,value,thickness)
 
-    def random_rectangles(self, *, seed=None, num_recs = 2):
+
+    def random_rectangles(self, *, seed=None, num_recs=2):
         '''add random rectangles
         Args:
             seed: seed for randomint

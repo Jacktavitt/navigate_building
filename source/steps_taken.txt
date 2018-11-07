@@ -131,4 +131,46 @@ http://wiki.ros.org/ROS/Tutorials/CreatingPackage
 - going to use https://www.pyimagesearch.com/2017/12/11/image-classification-with-keras-and-deep-learning/
     - in conjucntion with the keras tutorial to hopefully learn how it works.
     - following this toturial and running against my dataset from google
+- error running model to train: FileNotFoundError: [WinError 3] The system cannot find the path specified: 'data/train'
+    - wrong diorecotry :()
+- got it working with loading model, seemed like there was some correlation with the images to plaques (~0.1-0.2 for most plaque images)
+    - must try again with my own generated dataset
+    - TODO: better script writing in training set
+- back to survey ###
+    - using paramiko to ssh survey file, then sqlite3 to rad it into lists and make it nice https://stackoverflow.com/questions/29508743/download-files-over-ssh-using-python
+
+# 11-5-18 evaluating dataset
+- using MakeTrainingData.py and the hallway generator to create data. will use either method and evaluate which is better.
+- today is the random images from makeTrainingData.py
+    - generating 3000 each positive and negative images.
+    - creating them at 150X150
+    - ARGGH! images are repeating after only 10-20 iterations. what the hell?
+    - https://stackoverflow.com/questions/2145510/random-is-barely-random-at-all
+    - https://en.wikipedia.org/wiki/Mersenne_Twister
+    - thanks to the 'duh' moment from the SO question,
+        i made a sequential list of numbers, randomized that, and used that number
+        as the random seed for the image generator.
+        - after this, still some repeaters! Damnit!
+            ~ 348_pos and 387_pos - similar, but different background lines.
+            ~ 1495, 1533 same same!
+        - changed the passing of the random seed from image generator to image object. each image will have the same seed as its parent.
+        - still have some that arte teh exact same EXCEPT for the salt and pepper, which is through numpy.random. this leads me to beleive that
+            once an image gets a specific seed, it will make the same image. Changed implementation of random rectangles and lines to hoepfuilly 
+            switch it up.
+            - looks like this was effective enough to pass the QuickLook™ visaulk inspection.
+            - will now run through the Keras tutorial CNN
+
+# 11-6-18 I VOTED (but it didn't make a difference)
+- trouble with two huge ( > 390mb) files in a staged commit.
+- found thi guide to git https://sethrobertson.github.io/GitFixUm/fixup.html#remove_last
+    - git reset HEAD~2 (reset last two commits without removing the work done on them, no HARD command)
+    - seems to have worked
     
+# 11-7-18 The git solution DID NOT work
+- went here https://docs.microsoft.com/en-us/azure/devops/articles/remove-binaries?view=vsts at suggestion of Dr Schw
+    - found SHA of last good commit (git log)
+    - git rebase -i <SHA>
+    - didn't work: https://stackoverflow.com/questions/33911379/git-rebase-fatal-needed-a-single-revision-invalid-upstream-i/33911409
+        - git branch --set-upstream-to=origin/master
+    - wnet through and merged changes
+    - git push --force put me back where i belong

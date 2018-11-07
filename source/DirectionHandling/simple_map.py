@@ -3,10 +3,33 @@ import pprint
 
 ROOM_LIST = ['260','LADIES','258','256','254','252','250','248A', '248', '246', 'EXIT', '245','247','249','251','253','255','257','259','261','EXIT','260'] 
 
+def interperet_room_stream(room_stream):
+    '''
+    takes as argument a stream of results from the plaque-recognition
+    algos, which may be in the form "... 260, 260, 260 ... 260, 262 ..." 
+    as each frame is checked and the plaques is in multiple frames.
+    maybe should add "NO PLAQUE" in the stream when no plaque is found? 
+    also stream is not a stream object like in c or a generator (i htink)
+    it is called this to differantiate it from the room_list, which is
+    the product of this function
+    '''
+    pass
+
+
 def fix_exit_ambiguity(room_list):
-    keys = list(range(len(room_list)))
-    room_dict = dict(zip(keys, room_list))
-    
+    '''since some rooms may have the same name ... 
+        and the images come in sequential order,
+
+    '''
+    # keys = list(range(len(room_list)))
+    # room_dict = dict(zip(keys, room_list))
+    invert_map = {}
+    # for k, v in room_dict.items():
+    for k, v in enumerate(room_list):
+        invert_map[v] = invert_map.get(v, [])
+        invert_map[v].append[k]
+    return invert_map
+
 
 
 class SchoolMap(object):

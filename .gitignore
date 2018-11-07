@@ -14,3 +14,5 @@ __pycache__
 source/**/data/
 source/**/images/
 *.png
+source/**/nn_data/
+*.model

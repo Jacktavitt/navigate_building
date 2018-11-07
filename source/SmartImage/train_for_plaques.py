@@ -113,4 +113,8 @@ model.fit_generator(
     validation_data=validation_generator,
     validation_steps=nb_validation_samples // batch_size)
 
-model.save_weights('second_100ep_try.h5')
+model.save_weights('model_50ep.h5')
+model_json = model.to_json()
+with open("model.json", "w") as jf:
+    jf.write(model_json)
+    
