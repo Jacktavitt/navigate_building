@@ -166,3 +166,10 @@ http://wiki.ros.org/ROS/Tutorials/CreatingPackage
     - git reset HEAD~2 (reset last two commits without removing the work done on them, no HARD command)
     - seems to have worked
     
+# 11-7-18 The git solution DID NOT work
+- went here https://docs.microsoft.com/en-us/azure/devops/articles/remove-binaries?view=vsts at suggestion of Dr Schw
+    - found SHA of last good commit (git log)
+    - git rebase -i <SHA>
+    - wnet through and merged changes
+    - git push --force put me back where i belong
+    
