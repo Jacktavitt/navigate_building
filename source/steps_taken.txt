@@ -170,6 +170,7 @@ http://wiki.ros.org/ROS/Tutorials/CreatingPackage
 - went here https://docs.microsoft.com/en-us/azure/devops/articles/remove-binaries?view=vsts at suggestion of Dr Schw
     - found SHA of last good commit (git log)
     - git rebase -i <SHA>
+    - didn't work: https://stackoverflow.com/questions/33911379/git-rebase-fatal-needed-a-single-revision-invalid-upstream-i/33911409
+        - git branch --set-upstream-to=origin/master
     - wnet through and merged changes
     - git push --force put me back where i belong
-    
