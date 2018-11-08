@@ -2,6 +2,7 @@
 
 import os
 import cv2
+import argparse
 
 def getFilesInDirectory(directory, fileType):
     fileList=[]
@@ -38,3 +39,27 @@ def showKill(image, *, title=None):
 def betwixt(less_num, target, great_num):
     '''true if target falss between less_num and great_num'''
     return(less_num < target and target < great_num)
+
+def add_prefix_to_file(filepath, prefix):
+    '''
+    sets prefix in front of a filename and returns amended path
+    sample filepath: 'train/plaques/002999.png'
+    sample prefix: '0_'
+    '''
+    directory, file_name = os.path.split(filepath)
+    file_name = prefix + file_name
+    changed_path = os.path.join(directory, file_name)
+    return changed_path
+
+def str2bool(word):
+    '''
+    from 'Maxim's response to https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    will evaluate a string as a true or false
+    '''
+    if word.lower() in ('yes','true','y','t','yep','1','ok'):
+        return True
+    elif word.lower() in ('no','false','n','f','nope','0','nah','fuck you'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected. Very disappointed')
+
