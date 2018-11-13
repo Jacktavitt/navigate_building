@@ -2,6 +2,8 @@
 better data.
 Opens an image, calculates the size of the kernel that will
 be passing over it, and then does that randomly n times.
+    should also apply blur and transformation on images, returning a few images each time
+    TODO: do this ^
 '''
 import os
 import cv2

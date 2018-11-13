@@ -106,7 +106,7 @@ from sklearn.metrics import accuracy_score, f1_score
 from datetime import datetime
 
 # Model Hyperparamaters
-N_LAYERS = 4
+N_LAYERS = 7
 
 def cnn(size, n_layers):
     # INPUTS
@@ -148,6 +148,31 @@ def cnn(size, n_layers):
     model.add(Dense(1))
     model.add(Activation('sigmoid'))
 
+    # # subbing in the model from the keras tutorial
+    # model.add(Conv2D(nuerons[0], KERNEL, input_shape=size))
+    # model.add(Activation('relu'))
+    # model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # model.add(Conv2D(nuerons[1], KERNEL))
+    # model.add(Activation('relu'))
+    # model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # model.add(Conv2D(nuerons[2], KERNEL))
+    # model.add(Activation('relu'))
+    # model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # model.add(Conv2D(nuerons[3], KERNEL))
+    # model.add(Activation('relu'))
+    # model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # model.add(Flatten())
+    # model.add(Dense(nuerons[3]))
+    # model.add(Activation('relu'))
+    # model.add(Dropout(0.5))
+    # model.add(Dense(1))
+    # model.add(Activation('sigmoid'))
+
+
     # Compile the model
     model.compile(loss='binary_crossentropy',
                   optimizer='adam',
@@ -165,7 +190,7 @@ model = cnn(size=image_size, n_layers=N_LAYERS)
 ## MODEL TRAINING ##
 # Training Hyperparamters
 EPOCHS = 150
-BATCH_SIZE = 200
+BATCH_SIZE = 32
 
 # Early stopping callback
 PATIENCE = 10

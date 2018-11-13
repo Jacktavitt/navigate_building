@@ -10,10 +10,12 @@ import math
 import ADA
 import HandyTools as HAT
 
+PLAQUE_SHAPES = {'circle': 0, 'rectangle': 1, 'ellipse': 2, 'triangle': 3}
+
 class ImageGenerator(object):
 
-    def __init__(self, IMAGECLASS, resolution, *, size = None, bgValue = None, randSeed = 42,
-                plaqueValue = None, plaqueSize = None,
+    def __init__(self, IMAGECLASS, resolution, *, size=(600,600,3), bgValue=(237,245,247), randSeed=42,
+                plaqueValue=(42,5,102), plaqueSize=None, plaqueShape='rectangle',
                 fontFace = cv2.FONT_HERSHEY_SIMPLEX):
         '''initializer for generator class that produces images.
         Args:
@@ -30,23 +32,23 @@ class ImageGenerator(object):
         self._imgclass = IMAGECLASS
         self.res = resolution
         # set up initial size
-        if size is None:
-            self._size = (600,600,3)
-        else:
-            self._size = size
+
+        self._size = size
 
         # set background value. default is beige.
-        self._bgv = bgValue if bgValue is not None else (237,245,247)
+        self._bgv = bgValue
         #set random seed
         self._rands = randSeed
         random.seed(self._rands)
         #set plaque grayscale value. default is maroon.
-        self._pqv = plaqueValue if plaqueValue is not None else (42,5,102)
+        self._pqv = plaqueValue
         #set plaque size
         if plaqueSize is None:
             self._pqs = int(math.sqrt((self._size[0]*self._size[1])*0.01))
         else:
             self._pqs = int(plaqueSize)
+        # will plaque be rectangle, ellipse, or other shape?
+        self._plaque_shape = PLAQUE_SHAPES[plaqueShape] 
         #set font typeface
         self._font = fontFace
         #set font color, high contrast is key
@@ -73,7 +75,7 @@ class ImageGenerator(object):
                             color=self._color,seed=random.randint(0,255))
         return image
 
-    def make_hallway(self,*, res=None,txt='358B'):
+    def make_hallway(self, *, res=None, txt='358B', papers=None, posters=None):
         '''Make a 'hallway' with a sign and a door. Keep the sign coordinates.
         this hallway will then be chopped up and skewed to create a better dataset.
         should be long.
@@ -125,8 +127,9 @@ class ImageGenerator(object):
         # print("DEBUG TEXT BOX SIZE: {}".format(txtbx))
         (wt,ht),bs = txtbx
         self._pqs = wt+30 # 10px margin around at least
-        Px1=random.randint(0,HL_WD-self._pqs)
-        Py1= PQ_WALL_HT
+        # find a random spot for the plaque to be
+        Px1 = random.randint(0,HL_WD-self._pqs)
+        Py1 = PQ_WALL_HT
         # add the plaque
         (x,y), (Px2,Py2) = self.draw_room_sign(hallway, (Px1,Py1), self._pqs)
         # add text
@@ -139,12 +142,50 @@ class ImageGenerator(object):
             Dx1 = Px1 - (DR_WD+PQ_2_DR)
         Dy1 = HL_CEIL-DR_HT
         Dx2 = Dx1+DR_WD
-        Dy2 = Dy1+DR_HT
+        # Dy2 = Dy1+DR_HT
+        Dy2 = HL_CEIL
         # add the door
-        self.draw_door(hallway,Dx1,DW=DR_WD,DH=DR_HT)
+        self.draw_door(hallway, Dx1, DW=DR_WD, DH=DR_HT)
+        # now add some rectangles as papers and billboards in an area where there is no plaque or door
+        paper_size_h = res*11
+        paper_size_w = res*8
+        poster_size_h = random.randint(res*12, res* 36)
+        poster_size_w = random.randint(res*12, res* 36)
+        # clear space is where there is no door or plaque
+        # x1 is minimum value between leftmost plaque or door value
+        clear_space_x1 = min(Px1, Dx1)
+        # x2 is maximum value between rightmost plaque or door value
+        clear_space_x2 = max(Px2, Dx1+DR_WD)
+        # most things are hung in the visible range, so somewhere between 48" and 80"
+        # y1 is top, y2 is bottom
+        clear_space_y1 = HL_CEIL - res*80
+        clear_space_y2 = HL_CEIL - res*48
+        # now use the random square placement to drop a random number of papers, posters on the clear space
+        if posters:
+            # random_rectangles(self, *, seed=None, num_recs=2, right_bound=None, left_bound=None, top_bound=None, bottom_bound=None, rec_w=None, rec_h=None):
+            hallway.random_rectangles(seed=random.randint(0,1000), num_recs=posters,
+                                    right_bound=clear_space_x1,
+                                    left_bound=clear_space_x2,
+                                    top_bound=clear_space_y1,
+                                    bottom_bound=clear_space_y2,
+                                    rec_w=poster_size_w,
+                                    rec_h=poster_size_h)
+        if papers:
+            # random_rectangles(self, *, seed=None, num_recs=2, right_bound=None, left_bound=None, top_bound=None, bottom_bound=None, rec_w=None, rec_h=None):
+            hallway.random_rectangles(seed=random.randint(0,1000), num_recs=posters,
+                                    right_bound=clear_space_x1,
+                                    left_bound=clear_space_x2,
+                                    top_bound=clear_space_y1,
+                                    bottom_bound=clear_space_y2,
+                                    rec_w=paper_size_w,
+                                    rec_h=paper_size_h)
         # a little seasoning
         hallway.salt_and_pepper()
         return hallway, (x,y), (Px2,Py2)
+
+    # def add_paper_and_posters(self, num_posters, num_papers, top_left, bottom_right):
+        # pass
+
 
     def add_stuff(self, image, stuffScale = 2):
         '''adds other shapes and lines to image
@@ -158,11 +199,7 @@ class ImageGenerator(object):
                             num_recs = stuffScale)
         return image
 
-
-
-        
-
-    def _draw_room_number(self, image, x, y, *, FSCALE = 1, text = None):
+    def _draw_room_number(self, image, x, y, *, FSCALE=1, text=None):
         '''Helper function. Draws room number/letter on the plaque.
             Args:
                 self: instance
@@ -175,7 +212,7 @@ class ImageGenerator(object):
         cv2.putText(image.image, text, (x,y), self._font, FSCALE, self._fontv, 3)
         return image
 
-    def draw_door(self,image, x_coord,value=(7,30,56),*,DH=None,DW=None,CH=None):
+    def draw_door(self, image, x_coord, value=(7,30,56), *, DH=None, DW=None, CH=None):
         '''draw a door on the image.
         Args:
             DH: door height
@@ -196,7 +233,7 @@ class ImageGenerator(object):
         '''Thanks to https://stackoverflow.com/a/2257449 for the text/number generation
             generates random 3-char string of numbers and uppercase letters
         '''
-        text = ''.join(random.choices(string.digits+ string.ascii_uppercase,
+        text = ''.join(random.choices(string.digits + string.ascii_uppercase,
                          k=self._strlen))
         return text
 
@@ -219,8 +256,13 @@ class ImageGenerator(object):
         point2y = point1y + width
         p1 = (point1x,point1y)
         # print("DEBUG point1: {}\n".format(p1))
-        p2 = (point2x,point2y) 
-        image.rectangle(p1,p2,self._pqv,-1)
+        p2 = (point2x,point2y)
+        # adding possible scenarios for elliptical or triangular palques. not implemented yet.
+        if self._plaque_shape is 1:
+            image.rectangle(p1, p2, self._pqv, -1)
+        elif self._plaque_shape is 2:
+            pass
+
         return p1,p2
 
     def make_false_image(self, num_randos=4, seasoning = 0.02, *, blur = None):

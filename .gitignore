@@ -16,3 +16,4 @@ source/**/images/
 *.png
 source/**/nn_data/
 *.model
+*.h5

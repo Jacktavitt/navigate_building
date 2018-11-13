@@ -187,7 +187,7 @@ http://wiki.ros.org/ROS/Tutorials/CreatingPackage
         - add random light and dark rectangles to simulate posters and stuff
         - add black and white areas in door areas to simulate open doors with bright windows
 
-- RUNNING FROM A DIFFERENT TUTOPRIAL (https://medium.com/@kylepob61392/airplane-image-classification-using-a-keras-cnn-22be506fdb53)
+- RUNNING FROM A DIFFERENT TUTORIAL (https://medium.com/@kylepob61392/airplane-image-classification-using-a-keras-cnn-22be506fdb53)
     - my tensors brought all the GPUs to the yard 
             2018-11-08 13:58:36.316351: W T:\src\github\tensorflow\tensorflow\core\framework\op_kernel.cc:1275] OP_REQUIRES failed at conv_ops.cc:398 : Resource exhausted: OOM when allocating tensor with shape[200,92,142,142] and type float on /job:localhost/replica:0/task:0/device:GPU:0 by allocator GPU_0_bfc
             Traceback (most recent call last):
@@ -214,3 +214,62 @@ http://wiki.ros.org/ROS/Tutorials/CreatingPackage
     - will make images smaller? I feel like the plaque will dissappear into a single pixel and be meaningless
         - this may be why the previous results were ambiguous
         - may be fixed with the synthetic hallway
+        - changed BATCH_SIZE from 200 to 32 (line 168, otherclassifier.py)
+            - it runs now, but results are ~ 50% (baaaaaaaaad)
+        - replaced the CNN with the one from the keras tutorial, got 100% accuracy (must have done it wrong)
+            - still nonsense when running it on the training data.
+!!! It is becoming obvious that my lack of understanding is getting in the way of my using this technology properly.
+    - i will try the original version of this tut, as well as the keras one, with the other generated data.
+>>>>>>>>>> https://www.pyimagesearch.com/2014/11/10/histogram-oriented-gradients-object-detection/ <<<<<<<<<<<<<<<<<
+>>>>>>>>>> this way may be better for the hallway datasets. <<<<<<<<<<
+>>>>>>>>>> https://www.learnopencv.com/histogram-of-oriented-gradients/ <<<<<<<<<
+>>>>>>>>>> https://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf <<<<<<<<<
+
+# 11-13-18 Finally have idea for theme of thesis
+- problems exist in the world, and many of them have solutions that can be constructed from existing technology
+- three stages:
+    1: try the simplest programatic way to solve the problems
+        - user interaction to calibrate plaque size, find rectangles, make simple map
+        - out-of-the-box OCR for python
+        - this is mostly done (need to test with better data)
+    2: use machine learning to find images with plaques and to decode the words
+        - this stage is not done yet
+        - use SVM and HOG to train on found data, generated data, and recreated data
+        - SVM and HOG on chars74k dataset to learn letters and numbers
+    3: use Neural Nets and other deep-learning techniques
+        - keras CNNs on the three data types for plaque finding
+        - same for character recognition
+    >>>>>> FUTURE MOVES <<<<<<
+        - instead of simple video, use SLAM or some other way to get relational metric information
+            about the features and plaques to create a better map
+- three types of data:
+    1: found data
+        - from google image search (not huge)
+    2: generated data
+        - plaques or not plaques with random shit in the backgrounds
+    3: recreated data:
+        - create image of hallway, with posters, papers, doorways, etc
+        - sample parts of these images to generate more realistic dataset
+    >>>>>> FUTURE MOVES <<<<<<      
+        - use these plaque finding techniques to create a better dataset from real images
+            and then train better networks on this data
+
+# with that in mind, working on the hallway creator
+- add sensibly-placed stuff in background (papers and posters)
+- skew, stretch, rotate, scale, and flip snapshot images
+
+~~ I find that as I have been learning more of the python style guides and go back to working on previous code,
+        I run into problems such as:
+        in hall_driver, i have this line:
+            temp.save(imagePath=''.join([directory,str(TL[0]),'_',str(TL[1]),'.',str(BR[0]),'_',str(BR[1]),'.',str(n),'.png']))
+        but I have changed CustomImage.Image.save() to take file_path instead (more descriptive, and snake case)
+        so i get this error:
+            Traceback (most recent call last):
+            File "source\ImageGeneration\hall_driver.py", line 50, in <module>
+                main(args.directory, args.images)
+            File "source\ImageGeneration\hall_driver.py", line 32, in main
+                str(n),'.png']))
+            TypeError: save() got an unexpected keyword argument 'imagePath'
+        causing me to need to go back and figfure out what i changed.
+    ~~~ If i had unit tests to run each time before I commit a change, this would not happen as often!
+        - need to do unit testing at least a little bit

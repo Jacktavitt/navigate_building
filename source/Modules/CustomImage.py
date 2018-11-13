@@ -110,14 +110,14 @@ class Image(object):
             print("error occured: {}",e)
             raise
 
-    def rectangle(self, pt1,pt2, value = 120, thickness = 3):
+    def rectangle(self, top_left, bottom_right, value = 120, thickness = 3):
         '''Draw a rectangle at coordinates
         Args:
             p1, p2: edges of rectangle
             value: greyscale value
             thickness: how thick a line. -1 for filled.
         '''
-        self.image = cv2.rectangle(self.image, pt1,pt2,value, thickness)
+        self.image = cv2.rectangle(self.image, top_left, bottom_right, value, thickness)
 
     def line(self, pt1,pt2, value = 120, thickness = 3):
         '''Draw a line at coordinates
@@ -262,7 +262,7 @@ class GeneratedImage(Image):
                     for i in self.image.shape]
         self.image[coords] = 0
 
-    def random_lines(self, *, seed=None, num_lines = 2):
+    def random_lines(self, *, seed=None, num_lines=2):
         '''add random lines
         Args:
             seed: seed for randomint
@@ -272,9 +272,9 @@ class GeneratedImage(Image):
             seed = self.seed
         random.seed(seed)
         for n in range(num_lines):
-            pt1 = (random.randint(0, self.image.shape[0]),
+            top_left = (random.randint(0, self.image.shape[0]),
                         random.randint(0, self.image.shape[1]))
-            pt2 = (random.randint(0, self.image.shape[0]),
+            bottom_right = (random.randint(0, self.image.shape[0]),
                         random.randint(0, self.image.shape[1]))            
             value = random.randint(0,255)
             if self.color:
@@ -282,30 +282,41 @@ class GeneratedImage(Image):
                 val3 = random.randint(0,255)
                 value = (value, val2, val3)
             thickness = random.randint(1,10)
-            self.line(pt1,pt2,value,thickness)
+            self.line(top_left, bottom_right, value, thickness)
 
 
-    def random_rectangles(self, *, seed=None, num_recs=2):
+    def random_rectangles(self, *, seed=None, num_recs=2, right_bound=None, left_bound=None, top_bound=None, bottom_bound=None, rec_w=None, rec_h=None):
         '''add random rectangles
         Args:
             seed: seed for randomint
             num_lines: how many lines to draw
+            assuming that rec_h and rec_w will only be used if the clear space parameters are included (11-13)
         '''
         if seed is None:
             seed = self.seed
         random.seed(seed)
         for n in range(num_recs):
-            pt1 = (random.randint(0, self.image.shape[0]),
-                        random.randint(0, self.image.shape[1]))
-            pt2 = (random.randint(0, self.image.shape[0]),
-                        random.randint(0, self.image.shape[1]))        
-            value = random.randint(0,255)
+            # each of these is a rectangle dummy!
+            if not right_bound or left_bound or top_bound or bottom_bound:
+                # if user hasn't supplied values for all 4 boundaries, put it anywhere
+                top_left = (random.randint(0, self.image.shape[0]),
+                            random.randint(0, self.image.shape[1]))
+                bottom_right = (random.randint(0, self.image.shape[0]),
+                            random.randint(0, self.image.shape[1]))      
+            else:
+                # only put rectangles in this area
+                tl_x = random.randint(left_bound, int(right_bound-rec_w*0.5))
+                tl_y = random.randint(top_bound, int(bottom_bound-rec_h*0.5))
+                top_left = (tl_x, tl_y)
+                bottom_right = (tl_x+rec_w, tl_y+rec_h)
+
+            value = random.randint(180, 255)
             if self.color:
-                val2 = random.randint(0,255)
-                val3 = random.randint(0,255)
+                val2 = random.randint(180, 255)
+                val3 = random.randint(180, 255)
                 value = (value, val2, val3)
-            thickness = random.randint(-10,10)
-            self.rectangle(pt1,pt2,value,thickness)
+            thickness = random.randint(-10, 10)
+            self.rectangle(top_left, bottom_right, value, thickness)
 
 
 
