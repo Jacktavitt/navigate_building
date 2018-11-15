@@ -16,7 +16,7 @@ class ImageGenerator(object):
 
     def __init__(self, IMAGECLASS, resolution, *, size=(600,600,3), bgValue=(237,245,247), randSeed=42,
                 plaqueValue=(42,5,102), plaqueSize=None, plaqueShape='rectangle',
-                fontFace = cv2.FONT_HERSHEY_SIMPLEX):
+                fontFace=cv2.FONT_HERSHEY_SIMPLEX):
         '''initializer for generator class that produces images.
         Args:
             IMAGECLASS: the image class for objects being created.
@@ -112,6 +112,40 @@ class ImageGenerator(object):
         hallway = self._imgclass(np.full((HL_CEIL,HL_WD,3), (250,250,250),
                                 dtype=np.uint8),color=self._color,
                                 seed=random.randint(0,255))
+        
+         # now add some rectangles as papers and billboards in an area where there is no plaque or door
+        paper_size_h = res*11
+        paper_size_w = res*8
+        poster_size_h = random.randint(res*12, res* 36)
+        poster_size_w = random.randint(res*12, res* 36)
+        # clear space didn't work, need to make forbidden zone
+        # it is min of door left or plaque left, and max or door right and plaque rt
+
+        zona_peligrosa_x = []
+        # zona_peligrosa_y = [n for n in range(min(Dy1, Py1), max(Dy2, Py2))]
+        # additionally, add restrictions for height (so things are only where people would see them)
+        # assume most things hang between 80" and 36"
+        vis_top = HL_CEIL-res*80
+        vis_bottom = HL_CEIL-res*36
+        # not sure if it would be faster to build bigger list and then slice but my guess is the list
+        # comprehension is pretty integral so going with that
+        zona_peligrosa_y = [n for n in range(HL_CEIL) if n < vis_top or n > vis_bottom]
+        # print(len(zona_peligrosa_y))
+        # now use the random square placement to drop a random number of papers, posters on the clear space
+        if posters:
+            hallway.random_rectangles(seed=random.randint(0,1000), num_recs=posters,
+                                    zona_peligrosa_x=zona_peligrosa_x,
+                                    zona_peligrosa_y=zona_peligrosa_y,
+                                    rec_w=poster_size_w,
+                                    rec_h=poster_size_h)
+        if papers:
+            hallway.random_rectangles(seed=random.randint(0,1000), num_recs=papers,
+                                    zona_peligrosa_x=zona_peligrosa_x,
+                                    zona_peligrosa_y=zona_peligrosa_y,
+                                    rec_w=paper_size_w,
+                                    rec_h=paper_size_h)
+
+
         # generate text info
         # figure font size
         try:
@@ -119,11 +153,11 @@ class ImageGenerator(object):
         except Exception as e:
             print("ERROR: {}".format(e.message))
             raise
-        FSPx=fontInches*res
+        FSPx = fontInches*res
         FSCALE = FSPx/FONT_BS
         # now to generate coords for the plaque
         # TODO: rn this is hardcoded. should be dynamic
-        txtbx=cv2.getTextSize(txt,FONT,FSCALE,1) # get size of box bounding text
+        txtbx = cv2.getTextSize(txt,FONT,FSCALE,1) # get size of box bounding text
         # print("DEBUG TEXT BOX SIZE: {}".format(txtbx))
         (wt,ht),bs = txtbx
         self._pqs = wt+30 # 10px margin around at least
@@ -131,7 +165,7 @@ class ImageGenerator(object):
         Px1 = random.randint(0,HL_WD-self._pqs)
         Py1 = PQ_WALL_HT
         # add the plaque
-        (x,y), (Px2,Py2) = self.draw_room_sign(hallway, (Px1,Py1), self._pqs)
+        (_, _), (Px2, Py2) = self.draw_room_sign(hallway, (Px1,Py1), self._pqs)
         # add text
         self._draw_room_number(hallway, Px1, Py1+ht*2, text=txt)
         # its time for the door. will add on right if space, otherwise on left
@@ -146,42 +180,40 @@ class ImageGenerator(object):
         Dy2 = HL_CEIL
         # add the door
         self.draw_door(hallway, Dx1, DW=DR_WD, DH=DR_HT)
-        # now add some rectangles as papers and billboards in an area where there is no plaque or door
-        paper_size_h = res*11
-        paper_size_w = res*8
-        poster_size_h = random.randint(res*12, res* 36)
-        poster_size_w = random.randint(res*12, res* 36)
-        # clear space is where there is no door or plaque
-        # x1 is minimum value between leftmost plaque or door value
-        clear_space_x1 = min(Px1, Dx1)
-        # x2 is maximum value between rightmost plaque or door value
-        clear_space_x2 = max(Px2, Dx1+DR_WD)
-        # most things are hung in the visible range, so somewhere between 48" and 80"
-        # y1 is top, y2 is bottom
-        clear_space_y1 = HL_CEIL - res*80
-        clear_space_y2 = HL_CEIL - res*48
-        # now use the random square placement to drop a random number of papers, posters on the clear space
-        if posters:
-            # random_rectangles(self, *, seed=None, num_recs=2, right_bound=None, left_bound=None, top_bound=None, bottom_bound=None, rec_w=None, rec_h=None):
-            hallway.random_rectangles(seed=random.randint(0,1000), num_recs=posters,
-                                    right_bound=clear_space_x1,
-                                    left_bound=clear_space_x2,
-                                    top_bound=clear_space_y1,
-                                    bottom_bound=clear_space_y2,
-                                    rec_w=poster_size_w,
-                                    rec_h=poster_size_h)
-        if papers:
-            # random_rectangles(self, *, seed=None, num_recs=2, right_bound=None, left_bound=None, top_bound=None, bottom_bound=None, rec_w=None, rec_h=None):
-            hallway.random_rectangles(seed=random.randint(0,1000), num_recs=posters,
-                                    right_bound=clear_space_x1,
-                                    left_bound=clear_space_x2,
-                                    top_bound=clear_space_y1,
-                                    bottom_bound=clear_space_y2,
-                                    rec_w=paper_size_w,
-                                    rec_h=paper_size_h)
+        # # now add some rectangles as papers and billboards in an area where there is no plaque or door
+        # paper_size_h = res*11
+        # paper_size_w = res*8
+        # poster_size_h = random.randint(res*12, res* 36)
+        # poster_size_w = random.randint(res*12, res* 36)
+        # # clear space didn't work, need to make forbidden zone
+        # # it is min of door left or plaque left, and max or door right and plaque rt
+
+        # zona_peligrosa_x = [n for n in range(min(Dx1, Px1), max(Dx2, Px2))]
+        # # zona_peligrosa_y = [n for n in range(min(Dy1, Py1), max(Dy2, Py2))]
+        # # additionally, add restrictions for height (so things are only where people would see them)
+        # # assume most things hang between 80" and 36"
+        # vis_top = HL_CEIL-res*80
+        # vis_bottom = HL_CEIL-res*36
+        # # not sure if it would be faster to build bigger list and then slice but my guess is the list
+        # # comprehension is pretty integral so going with that
+        # zona_peligrosa_y = [n for n in range(HL_CEIL) if n < vis_top or n > vis_bottom]
+        # print(len(zona_peligrosa_y))
+        # # now use the random square placement to drop a random number of papers, posters on the clear space
+        # if posters:
+        #     hallway.random_rectangles(seed=random.randint(0,1000), num_recs=posters,
+        #                             zona_peligrosa_x=zona_peligrosa_x,
+        #                             zona_peligrosa_y=zona_peligrosa_y,
+        #                             rec_w=poster_size_w,
+        #                             rec_h=poster_size_h)
+        # if papers:
+        #     hallway.random_rectangles(seed=random.randint(0,1000), num_recs=papers,
+        #                             zona_peligrosa_x=zona_peligrosa_x,
+        #                             zona_peligrosa_y=zona_peligrosa_y,
+        #                             rec_w=paper_size_w,
+        #                             rec_h=paper_size_h)
         # a little seasoning
         hallway.salt_and_pepper()
-        return hallway, (x,y), (Px2,Py2)
+        return hallway, (Px1,Py1), (Px2, Py2)
 
     # def add_paper_and_posters(self, num_posters, num_papers, top_left, bottom_right):
         # pass
@@ -245,6 +277,9 @@ class ImageGenerator(object):
                 top_left: coordinates for placement of top left
                 of plaque. if None, randomly place.
                     should be (point1x,point1y)
+            Returns:
+                top_left: x, y coordinate of top left of rectangle
+                bottom_right: x, y coordinate of bottom left of rectgl
         '''
         #create random starting point within boundaries
         if top_left is not None:
@@ -254,16 +289,15 @@ class ImageGenerator(object):
             point1y = random.randint(0, (self._size[0]-self._pqs))
         point2x = point1x + width
         point2y = point1y + width
-        p1 = (point1x,point1y)
+        top_left = (point1x, point1y)
         # print("DEBUG point1: {}\n".format(p1))
-        p2 = (point2x,point2y)
+        bottom_right = (point2x, point2y)
         # adding possible scenarios for elliptical or triangular palques. not implemented yet.
         if self._plaque_shape is 1:
-            image.rectangle(p1, p2, self._pqv, -1)
+            image.rectangle(top_left, bottom_right, self._pqv, -1)
         elif self._plaque_shape is 2:
             pass
-
-        return p1,p2
+        return top_left, bottom_right
 
     def make_false_image(self, num_randos=4, seasoning = 0.02, *, blur = None):
         '''generate an image without a room sign.

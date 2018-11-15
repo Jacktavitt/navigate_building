@@ -25,8 +25,8 @@ def main(directory, images):
     IMG_GENR = DAG.ImageGenerator(IMAGE_CLASS, plaqueSize=75, resolution=10, randSeed=42)
 
     for n in range(images):
-        temp, TL, BR =IMG_GENR.make_hallway(papers=n, posters=n)
-        temp.show()
+        temp, TL, BR =IMG_GENR.make_hallway(papers=n, posters=int(n/2))
+        # temp.show()
         file_name = ''.join([str(TL[0]), '_', str(TL[1]),'.', str(BR[0]), '_', str(BR[1]), '.', str(n), '.png'])
         temp.save(file_path=os.path.join(directory, file_name))
 

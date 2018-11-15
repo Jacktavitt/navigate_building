@@ -273,3 +273,13 @@ http://wiki.ros.org/ROS/Tutorials/CreatingPackage
         causing me to need to go back and figfure out what i changed.
     ~~~ If i had unit tests to run each time before I commit a change, this would not happen as often!
         - need to do unit testing at least a little bit
+
+# 11-13-18 running in the hallway
+- initial test put too much crap right in front of the door!
+    - instead of making a clear area, i'll specify a no-go area
+    - any points that are randomly gen'd that lie in this area will be re-rolled
+    - best way to do this?
+        - instead of an if/loop thing, maybe create a list of possible x or y values,
+            and randomly grab one from there
+- wrestling a little with it, when i think:
+    ?? why not just place plaque and door over the background stuff ??

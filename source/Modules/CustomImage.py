@@ -44,11 +44,14 @@ class Image(object):
         self.height = self.shape[0]
         self.width = self.shape[1]
         self.dimensions = 0 if len(self.shape) < 3 else self.shape[2]
-
+        self.possible_x = None
+        self.possible_y = None
         if self.dimensions is not 3:
             self.color = False
         else:
             self.color = True
+        self.possible_x = [n for n in range(self.width)]
+        self.possible_y = [n for n in range(self.height)]
 
     def copy(self):
         '''returns a Custom Image object identical to this one'''
@@ -236,7 +239,11 @@ class Image(object):
 class GeneratedImage(Image):
     '''images that are created. Inherits init from parent Image
     '''
-     
+    # def __init__(self):
+    #     self.possible_x = [n for n in range(self.width)]
+    #     self.possible_y = [n for n in range(self.height)]
+
+
     def salt_and_pepper(self, seasoning=0.007, seed = None):
         '''creates a sprinkling of salt and pepper on an image.
         Args:
@@ -271,6 +278,8 @@ class GeneratedImage(Image):
         if seed is None:
             seed = self.seed
         random.seed(seed)
+
+
         for n in range(num_lines):
             top_left = (random.randint(0, self.image.shape[0]),
                         random.randint(0, self.image.shape[1]))
@@ -285,30 +294,26 @@ class GeneratedImage(Image):
             self.line(top_left, bottom_right, value, thickness)
 
 
-    def random_rectangles(self, *, seed=None, num_recs=2, right_bound=None, left_bound=None, top_bound=None, bottom_bound=None, rec_w=None, rec_h=None):
+    def random_rectangles(self, *, seed=None, num_recs=2, zona_peligrosa_x=None, zona_peligrosa_y=None, rec_w=None, rec_h=None):
         '''add random rectangles
         Args:
             seed: seed for randomint
             num_lines: how many lines to draw
+            zona peligrosa: areas on x or y that cannot be drawn upon, a set
             assuming that rec_h and rec_w will only be used if the clear space parameters are included (11-13)
         '''
         if seed is None:
             seed = self.seed
         random.seed(seed)
+        # must account for width of rectangle!
+        ok_x = [n for n in self.possible_x if (n + rec_w) not in zona_peligrosa_x] if zona_peligrosa_x else self.possible_x
+        ok_y = [n for n in self.possible_y if n not in zona_peligrosa_y] if zona_peligrosa_y else self.possible_y
+
+
         for n in range(num_recs):
             # each of these is a rectangle dummy!
-            if not right_bound or left_bound or top_bound or bottom_bound:
-                # if user hasn't supplied values for all 4 boundaries, put it anywhere
-                top_left = (random.randint(0, self.image.shape[0]),
-                            random.randint(0, self.image.shape[1]))
-                bottom_right = (random.randint(0, self.image.shape[0]),
-                            random.randint(0, self.image.shape[1]))      
-            else:
-                # only put rectangles in this area
-                tl_x = random.randint(left_bound, int(right_bound-rec_w*0.5))
-                tl_y = random.randint(top_bound, int(bottom_bound-rec_h*0.5))
-                top_left = (tl_x, tl_y)
-                bottom_right = (tl_x+rec_w, tl_y+rec_h)
+            top_left = (random.choice(ok_x), random.choice(ok_y))
+            bottom_right = (top_left[0]+rec_w, top_left[1]+rec_h)
 
             value = random.randint(180, 255)
             if self.color:
