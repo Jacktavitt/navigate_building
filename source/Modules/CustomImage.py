@@ -6,6 +6,7 @@ import math
 import cv2
 import random
 import numpy as np
+import platform
 import CustomErrors as cerr
 
 class Image(object):
@@ -50,8 +51,6 @@ class Image(object):
             self.color = False
         else:
             self.color = True
-        self.possible_x = [n for n in range(self.width)]
-        self.possible_y = [n for n in range(self.height)]
 
     def copy(self):
         '''returns a Custom Image object identical to this one'''
@@ -93,25 +92,50 @@ class Image(object):
 
         self.image = cv2.resize(self.image,None,fx=factor, fy=factor)
 
-    def show(self, *, title = None):
-        '''Show the image in a window. will wait for kill signal.'''
-        title = title if title else "image"
-        status = 1
-        try:
+    def show(self, *, title=None, pause=None):
+        '''
+        Show the image in a window. will wait for kill signal.
+            checks to see if running windows or linux to fix a bug fixed by
+            the getwindowproperty, where closing the image with the 'x' button
+            would cause ipython to block, and the window was not there to receive a
+            weaitkey signal.
+            did not occur on windows, and the window property does not work the same way
+            (i think) on windows system.
+
+            pause allows a window to automaatically close after a length of time
+        '''
+        if pause is not None:
             cv2.imshow(title, self.image)
-            while status > 0:
-                ks=cv2.waitKey(1000)
-                try:
-                    status = cv2.getWindowProperty(title,cv2.WND_PROP_VISIBLE)
-                except Exception as e:
-                    status = -1
-                    break
-                if ks > 0:
-                    break
+            cv2.waitKey(pause)
             cv2.destroyWindow(title)
-        except Exception as e:
-            print("error occured: {}",e)
-            raise
+        else:
+            title = title if title else "image"
+            status = 1
+            if platform.system() == 'Windows':
+                # print("[INFO] using Windows")
+                cv2.imshow(title, self.image)
+                cv2.waitKey()
+                cv2.destroyWindow(title)
+            else:
+                # print(f"[INFO] using system {platform.system}")
+                # assume we're running linux
+                try:
+                    cv2.imshow(title, self.image)
+                    while status > 0:
+                        ks=cv2.waitKey(1000)
+                        try:
+                            # this does not work for windows like it does for linux.
+                            # TODO: check system first
+                            status = cv2.getWindowProperty(title,cv2.WND_PROP_VISIBLE)
+                        except Exception as e:
+                            status = -1
+                            break
+                        if ks > 0:
+                            break
+                    cv2.destroyWindow(title)
+                except Exception as e:
+                    print("error occured: {}",e)
+                    raise
 
     def rectangle(self, top_left, bottom_right, value = 120, thickness = 3):
         '''Draw a rectangle at coordinates
@@ -210,15 +234,6 @@ class Image(object):
         else:
             raise cerr.DumbProgramError("Can only accept even squares!")
 
-    # @classmethod
-    # def show_them(cls, image_list):
-    #     '''will show many image objects and wait until a key is pressed.'''
-    #     try:
-    #         cv2.imshow(title, self.image)
-    #     except Exception as e:
-    #         print(f"error occured: {e}")
-    #     cv2.waitKey(0)
-    #     cv2.destroyAllWindows()
 
     @classmethod
     def open(cls, filename):
@@ -239,12 +254,29 @@ class Image(object):
 class GeneratedImage(Image):
     '''images that are created. Inherits init from parent Image
     '''
-    # def __init__(self):
-    #     self.possible_x = [n for n in range(self.width)]
-    #     self.possible_y = [n for n in range(self.height)]
+    def __init__(self, image, *, path=None, fileName=None,
+                 extension=None, copy=False, seed=42, color=None, percentage=None):
+        super().__init__(image, path=path, fileName=fileName, extension=extension, copy=copy, seed=seed, color=color, percentage=percentage)
+        self.possible_x = [n for n in range(self.width)]
+        self.possible_y = [n for n in range(self.height)]
 
+    def copy(self):
+        '''returns a Custom Image object identical to this one'''
+        return GeneratedImage(self.image)
 
-    def salt_and_pepper(self, seasoning=0.007, seed = None):
+    def rotate(self, degree, *, center=None):
+        '''rotate an image'''
+        pass
+
+    def skew(self, four_points):
+        '''apply perspective tranformation to image
+            takes wither simple list or npfloats
+        '''
+        dest_points = np.float32([[0,0],[self.height,0],[0, self.width], [self.height, self.width]])
+        matrix = cv2.getPerspectiveTransform(four_points, dest_points)
+        self.image = cv2.warpPerspective(self.image, matrix, (self.height, self.width))
+
+    def salt_and_pepper(self, seasoning=0.007, seed=None):
         '''creates a sprinkling of salt and pepper on an image.
         Args:
             seasoning: how much salt and pepper to add

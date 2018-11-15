@@ -9,8 +9,17 @@ import os
 import cv2
 import numpy as np
 import random
-import CustomImage as CIM
+import CustomImage
 from argparse import ArgumentParser
+
+def apply_transformations_to(image, directory, file_name_base):
+    ''' skew, rotate, flip, and bluir an image. save them all. '''
+    spin = image.copy()
+    skew = image.copy()
+    h_blur = image.copy()
+    v_blur = image.copy()
+    spin.rotate(12.5)
+
 
 def main(filename,percent,num,directory):
     '''driver for splitting up generated images into smaller snapshots.
@@ -23,7 +32,7 @@ def main(filename,percent,num,directory):
         directory: where to save the snaps
     
     '''
-    base=CIM.Image.open(filename)
+    base = CustomImage.Image.open(filename)
     # base.resize(percentage=50)
     # base.show()
     pcnt = .01*float(percent)
@@ -55,9 +64,9 @@ def main(filename,percent,num,directory):
             plaque='_True'
             num_with_plq += 1
 
-        crop = CIM.Image(base.image[Y1:Y2,X1:X2, :])
-        fname = ''.join([directory,name,'_',percent,'p_',str(n),plaque,'.png'])
-        crop.save(fname)
+        crop = CustomImage.GeneratedImage(base.image[Y1:Y2,X1:X2, :])
+        file_name_base = ''.join([name,'_',percent,'p_',str(n),plaque,'.png'])
+        apply_transformations_to(crop, directory, file_name_base)
     
     num_without = num - num_with_plq
     if num_without > num_with_plq:
@@ -68,7 +77,7 @@ def main(filename,percent,num,directory):
             Y1=TL[1] - 3*n
             X2=X1+width
             Y2=Y1+height
-            crop = CIM.Image(base.image[Y1:Y2,X1:X2, :])
+            crop = CustomImage.GeneratedImage(base.image[Y1:Y2,X1:X2, :])
             fname = ''.join([directory,name,'_',percent,'p_',str(n+num),plaque,'.png'])
             crop.save(fname)
 

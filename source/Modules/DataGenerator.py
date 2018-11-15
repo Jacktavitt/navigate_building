@@ -118,8 +118,6 @@ class ImageGenerator(object):
         paper_size_w = res*8
         poster_size_h = random.randint(res*12, res* 36)
         poster_size_w = random.randint(res*12, res* 36)
-        # clear space didn't work, need to make forbidden zone
-        # it is min of door left or plaque left, and max or door right and plaque rt
 
         zona_peligrosa_x = []
         # zona_peligrosa_y = [n for n in range(min(Dy1, Py1), max(Dy2, Py2))]
@@ -129,7 +127,8 @@ class ImageGenerator(object):
         vis_bottom = HL_CEIL-res*36
         # not sure if it would be faster to build bigger list and then slice but my guess is the list
         # comprehension is pretty integral so going with that
-        zona_peligrosa_y = [n for n in range(HL_CEIL) if n < vis_top or n > vis_bottom]
+        # need to include the size of the paper or poster in the danger zone, thus the subtraction of poster_size
+        zona_peligrosa_y = [n for n in range(HL_CEIL) if n < vis_top or n > vis_bottom-poster_size_h]
         # print(len(zona_peligrosa_y))
         # now use the random square placement to drop a random number of papers, posters on the clear space
         if posters:
