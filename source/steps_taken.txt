@@ -283,3 +283,16 @@ http://wiki.ros.org/ROS/Tutorials/CreatingPackage
             and randomly grab one from there
 - wrestling a little with it, when i think:
     ?? why not just place plaque and door over the background stuff ??
+
+# 11-15-18 Time to start writing this beast :^(
+- https://www.evl.uic.edu/spiff/fear/thesis/index.html
+- https://writerspk.com/computer-science-thesis/
+-= http://www.cs.toronto.edu/~sme/presentations/thesiswriting.pdf
+
+- also, thought on keras and ml models:
+    >>> instead of feeding the image itself to the classifier, maybe send information ABOUT the image,
+        such as contours, contour areas, etc
+        - since the thing we're looking for (a colored rectangle) has no inherent difference from
+            anything else in the image
+        - if i can find text, location of the text box would be good too
+        >>> maybe swipe over images and try to read text in each spot?
