@@ -330,3 +330,10 @@ NameError: name 'numpy' is not defined
 
 In [37]: isinstance(bar, np.ndarray)
 Out[37]: True
+
+## 11-27-18 writing time
+- finding as i write that the final result of the project is going to be more limited than I had anticipated
+- BUMMER
+- Should have started writing a few months ago, but here we are
+- Need to finalize a graph-making system before I can really write much more
+    - must make assumptions about the results of the palque-reading system

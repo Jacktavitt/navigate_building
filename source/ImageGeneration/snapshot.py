@@ -14,11 +14,13 @@ from argparse import ArgumentParser
 
 def apply_transformations_to(image, directory, file_name_base):
     ''' skew, rotate, flip, and bluir an image. save them all. '''
-    spin = image.copy()
+    spin_cc = image.copy()
+    spin_ac = image.copy()
     skew = image.copy()
     h_blur = image.copy()
     v_blur = image.copy()
-    spin.rotate(12.5)
+    spin_cc.rotate(10.5)
+    spin_cc.rotate(-10.5)
 
 
 def main(filename,percent,num,directory):
