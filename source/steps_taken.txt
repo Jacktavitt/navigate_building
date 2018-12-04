@@ -337,3 +337,21 @@ Out[37]: True
 - Should have started writing a few months ago, but here we are
 - Need to finalize a graph-making system before I can really write much more
     - must make assumptions about the results of the palque-reading system
+    - dictionary key renaming: https://stackoverflow.com/questions/4406501/change-the-name-of-a-key-in-dictionary/20563278
+
+# 11-29-18 working on mpa building
+- doc suggested I hand-label etric data for rooms, great idea as precursor to SLAM (be the SLAM)
+- maybe make map-builder only accept list of rooms, instead of direct plaque output.
+    - this will abstract it and make it easier to use with different inputs
+    - must normalize the output before sending to mapbuilder
+
+# 12-4-18 working on hand-posing the allway data
+- was trying to figure out how to join sausage-style hallways togther, started to involve lots of work on connecting the exits in the hallways
+    - if I was going to do the artificial pose info as well, it seems redundant as the sausage-link hallways are a model that does not have poseinfo
+    - I decided to just let the sausage link be diconeected, and to work on hand-posed info
+- I will have a model of a few hallways, and generate datae from that
+    - each pose will be in the form of an (x,y) coordinate which will be approximating the location of the ...
+        - if location of camera, joining exits will be difficult ( if camera is far from the exit, the distance between the 'location' of the same door will be possibly larger than the distance between adjacent doors)
+        - if location of 'plaque', may be assuming too much about what i can realistically grab from a SLAM-type system
+        - going with location of plaque for now, maybe a range based on which images have the plaque inside
+            > this may mirror the effect of running SLAM and the locations of features
