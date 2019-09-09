@@ -36,7 +36,7 @@ class Image(object):
 
         self.path = '' if not path else path
         self.file_name = 'temp' if not fileName else fileName
-        self.extension = 'png' if not extension else extension
+        self.extension = 'png' # if not extension else extension
         self.image_path = ''.join(self.path + self.file_name + '.' + self.extension)
         self.seed = seed
         self.percentage = percentage if percentage else 1
@@ -103,8 +103,11 @@ class Image(object):
             (i think) on windows system.
 
             pause allows a window to automaatically close after a length of time
+            pause is limited to minimum 1000 msec as lower calues can cause weird behavior
+                plus it should be safe!
         '''
         if pause is not None:
+            pause = 1000 if pause < 1000 else pause
             cv2.imshow(title, self.image)
             cv2.waitKey(pause)
             cv2.destroyWindow(title)
@@ -173,9 +176,12 @@ class Image(object):
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         self.color = False
 
-    def save(self, *, file_path=None, file_name=None, ):
+    def save(self, *, file_path=None, file_name=None ):
         '''Saves image to file.
+        TODO: allow for changing file name
         '''
+        if file_name:
+            pass
         if file_path:
             self.image_path = file_path
         cv2.imwrite(self.image_path, self.image)
@@ -266,12 +272,18 @@ class GeneratedImage(Image):
 
     def rotate(self, degree, *, center=None):
         '''rotate an image'''
-        pass
+        # img = cv2.imread('messi5.jpg',0)
+        # rows,cols = img.shape
+        matrix = cv2.getRotationMatrix2D((self.height/2,self.width/2),degree,1)
+        self.image = cv2.warpAffine(self.image, matrix, (self.width,self.height), borderMode=cv2.BORDER_REPLICATE)
 
     def skew(self, four_points):
         '''apply perspective tranformation to image
             takes wither simple list or npfloats
         '''
+        if not isinstance(four_points, np.ndarray):
+            four_points = np.float32(four_points)
+
         dest_points = np.float32([[0,0],[self.height,0],[0, self.width], [self.height, self.width]])
         matrix = cv2.getPerspectiveTransform(four_points, dest_points)
         self.image = cv2.warpPerspective(self.image, matrix, (self.height, self.width))

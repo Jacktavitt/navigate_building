@@ -63,3 +63,23 @@ def str2bool(word):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected. Very disappointed')
 
+def distill_list(list_of_elements):
+    '''
+    takes a list of many items and removes all adjacent duplicates.
+    how to do this with functional programming ideals?
+    '''
+    new_list = []
+    cur_idx = 0
+    now_val = list_of_elements[cur_idx]
+    for index, value in enumerate(list_of_elements):
+        if cur_idx == len(list_of_elements)-1:
+            new_list.append(now_val)
+            break
+        if list_of_elements[cur_idx+1] is now_val:
+            cur_idx += 1
+        elif list_of_elements[cur_idx+1] is not now_val:
+            new_list.append(now_val)
+            cur_idx += 1
+            now_val = list_of_elements[cur_idx]
+    return new_list
+
