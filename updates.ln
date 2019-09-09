@@ -1,0 +1,38 @@
+# 9-09-2019
+## getting back into the saddle
+
+    * to run the area getter: >python source\ImageComprehension\Contours\plaque_finder_driver_10-18.py  C:\Users\TJAMS002\Documents\ComputerScience\Thesis\ku_images\IMG_0092_resized.JPG
+
+    * this returns a dictionary of data about the ideal plaque.
+        * not sure if this is called in automation yet.
+
+    * may need to abandon the keras/nn stuff as it was poorly conceived and I was working in the dark ... image generation is interesting though.
+
+## steps to take forward:
+
+### image comprehension
+* get better footage
+* guided learning
+    * automate the guided plaque with footage
+    * grab a few random images and build a range
+    * come up with some linear algebra (basic machine learning algos) and then have results for each
+* neural net
+    * try to build a pipeline that gets results from hand-labelled (new) footage
+    * iterate with generated images
+    * compare these two (accuracy/time/kWh?)
+* letters
+    * once this is in place, we can try to read them (better footage should help)
+* payload
+    * what object will be returned by this image comprehension?
+
+### map making
+* where am I if I think that the simple methods above will work?
+    * limiatations of space / time etc
+    * hallway shapes
+    * human intervention
+        * flash cards for begin/end
+        * some way to denote stairwells or exits
+        * What could ROS bring to the table (dead reconing)
+* SLAM
+    * integrate SLAM with the better image rcognizer
+    * how does this compare to the simpler methods above?

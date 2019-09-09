@@ -90,7 +90,7 @@ def calibratePlaque(source_image):
     # remove color from image
     gray = CustomImage.Image(image, copy=True)
     gray.gray()
-    gray.thresh()
+    gray.thresh(thresh_num=50)
     contours = canny_edge_and_contours(gray)
     # lets show an image of the contours, they each have a name
     # and a radio button to choose the right one
@@ -158,6 +158,8 @@ def calibratePlaque(source_image):
     tk.Button(window, text="CONFIRM SELECTION", image=PIXEL, command=CloseWindow, compound='c', width=(image.get_width())).pack(side='top')
     window.mainloop()
 
+    print(f"chosen item: {chosen.get()} in the result:{areas[int(chosen.get())]}")
+    # print(f"just for shits: whole area dictionary: {areas}")
     return areas[int(chosen.get())]
 
 def simpleCallBack(*args):

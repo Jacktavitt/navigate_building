@@ -302,31 +302,31 @@ http://wiki.ros.org/ROS/Tutorials/CreatingPackage
 
     In [30]: arr = [[1,23],[23,200],[450,11],[512,512]]
 
-In [31]: type(arr)
-Out[31]: list
+    In [31]: type(arr)
+    Out[31]: list
 
-In [32]: bar = np.float32(arr)
+    In [32]: bar = np.float32(arr)
 
-In [33]: bar
-Out[33]:
-array([[  1.,  23.],
-       [ 23., 200.],
-       [450.,  11.],
-       [512., 512.]], dtype=float32)
+    In [33]: bar
+    Out[33]:
+    array([[  1.,  23.],
+        [ 23., 200.],
+        [450.,  11.],
+        [512., 512.]], dtype=float32)
 
-In [34]: isinstance(arr, list)
-Out[34]: True
+    In [34]: isinstance(arr, list)
+    Out[34]: True
 
-In [35]: isinstance(bar, list)
-Out[35]: False
+    In [35]: isinstance(bar, list)
+    Out[35]: False
 
-In [36]: isinstance(bar, numpy.ndarray)
----------------------------------------------------------------------------
-NameError                                 Traceback (most recent call last)
-<ipython-input-36-71ec08aa9573> in <module>()
-----> 1 isinstance(bar, numpy.ndarray)
+    In [36]: isinstance(bar, numpy.ndarray)
+    ---------------------------------------------------------------------------
+    NameError                                 Traceback (most recent call last)
+    <ipython-input-36-71ec08aa9573> in <module>()
+    ----> 1 isinstance(bar, numpy.ndarray)
 
-NameError: name 'numpy' is not defined
+    NameError: name 'numpy' is not defined
 
-In [37]: isinstance(bar, np.ndarray)
-Out[37]: True
+    In [37]: isinstance(bar, np.ndarray)
+    Out[37]: True
