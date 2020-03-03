@@ -1,0 +1,44 @@
+   28  sudo apt-get install python3-pip
+Setting up from pyimage search
+   54  sudo apt-get install python-virtualenv
+   60  makenv thesis
+   61  workon thesis
+   62  sudo apt-get update
+   63  sudo apt-get upgrade
+   64  sudo apt-get install build-essential cmake unzip pkg-config
+   65  sudo apt-get install libjpeg-dev libtiff-dev libpng-dev
+   66  sudo apt-get install libjasper-dev
+   67  sudo add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"
+   68  sudo apt update
+   69  sudo apt install libjasper1 libjasper-dev
+   70  sudo apt-get install libgtk-3-dev
+   71  sudo apt-get install libatlas-base-dev gfortran
+   72  sudo apt-get install python3.6-dev
+   73  pip install numpy
+   74  pip install scipy matplotlib scikit-learn scikit-image mahotas imutils Pillow json_minify
+   75  cd ~
+   76  wget -O opencv.zip https://github.com/opencv/opencv/archive/3.4.4.zip
+   77  wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/3.4.4.zip
+   78  unzip opencv.zip
+   79  unzip opencv_contrib.zip
+   80  mv opencv-3.4.4 opencv
+   81  mv opencv_contrib-3.4.4 opencv_contrib
+   82  cd opencv
+   83  mkdir build
+   84  cd build
+   85  cmake -D CMAKE_BUILD_TYPE=RELEASE \\n    -D CMAKE_INSTALL_PREFIX=/usr/local \\n    -D WITH_CUDA=OFF \\n    -D INSTALL_PYTHON_EXAMPLES=ON \\n    -D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \\n    -D OPENCV_ENABLE_NONFREE=ON \\n    -D BUILD_EXAMPLES=ON ..
+   86  lscpu
+   87  lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
+   88  make -j6
+   89  sudo make install
+   90  sudo ldconfig
+   92  cd /usr/local/python/cv2/python-3.6
+   93  sudo mv cv2.cpython-36m-x86_64-linux-gnu.so cv2.so
+   94  cd $VENV/thesis/lib/python3.6/site-packages
+   96  ln -s /usr/local/python/cv2/python-3.6/cv2.so cv2.so
+
+Installing tkinter and tesseract
+   99  pip install ipython
+  111* sudo apt-get install tesseract-ocr
+  112* pip install pytesseract
+  113* sudo apt-get install python3-tk

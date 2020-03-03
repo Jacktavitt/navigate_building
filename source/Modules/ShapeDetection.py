@@ -133,9 +133,8 @@ def calibratePlaque(source_image):
         areas[idx]['label'] = label
         areas[idx]['contour'] = contour
         areas[idx]['contour_area'], (areas[idx]['contour_w'], areas[idx]['contour_h']), (x, y) = drawSingleContour(image.image, contour)
-        areas[idx]['minred_area'], mrwh, bl_tl_tr_br = drawSingleMinRec(image.image, contour)
-        areas[idx]['ratio'] = actualVsMBRArea(areas[idx]['contour_area'],
-                    areas[idx]['minred_area'])
+        areas[idx]['minred_area'], mrwh, areas[idx]['bl_tl_tr_br'] = drawSingleMinRec(image.image, contour)
+        areas[idx]['ratio'] = actualVsMBRArea(areas[idx]['contour_area'],  areas[idx]['minred_area'])
 
         if catchWeirdShape(areas[idx]['contour_w'],
                            areas[idx]['contour_h']) or catchWeirdShape(mrwh[0], mrwh[1]):

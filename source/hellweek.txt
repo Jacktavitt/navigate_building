@@ -1,0 +1,22 @@
+Monday: setup
+https://circuitdigest.com/microcontroller-projects/license-plate-recognition-using-raspberry-pi-and-opencv
+https://circuitdigest.com/microcontroller-projects/optical-character-recognition-ocr-using-tesseract-on-raspberry-pi
+* set up environment
+* image processing and normalization pipeline
+[open] -> [size] -> [gray] -> [blur] -> [edges] -> [contours] -> [crop] -> [OCR]
+* can use the human-interaction which dictates whaich size of rectangle to grab fopr a session
+
+Tuesday: automation
+* use feature-free ur-image to provide 'human input' ( proper camera location, with obvious plaque in center for calibration)
+* HOG and other image dectector 
+    * https://stackoverflow.com/a/37005437
+    * https://docs.opencv.org/2.4/modules/gpu/doc/object_detection.html
+
+Wednesday: 
+* install and ??? with keras
+
+Thursday:
+* ???
+
+Friday:
+* ???
