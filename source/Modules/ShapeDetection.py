@@ -199,6 +199,7 @@ def canny_edge_and_contours(source_image, *, threshold_1=50, threshold_2=250):
     _, contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return contours
 
+
 def get_plaques_matching_ratio(source_image_location, *, good_area, good_ht, good_wd, save_directory, do_crop=False, _debug_mode=False):
     '''
     source_image: CustomImage object
