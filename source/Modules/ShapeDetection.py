@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import CustomImage
 import HandyTools as HT
-import numpy as np
+import numpy
 from PIL import Image, ImageTk
 import cv2
 import imutils
@@ -9,6 +9,7 @@ import os
 import pytesseract
 import tkinter as tk
 import string
+from ImageMeta import ImageDetectionMetadata
 ALL_CHARS = string.ascii_letters + string.digits
 
 
@@ -54,7 +55,7 @@ def drawSingleMinRec(image, c, *, doop=None):
     bottom = (bl[0], bl[1])
     # area = cv2.contourArea(c)
     min_area = round((width * height), 2)
-    box = np.int0(box1)
+    box = numpy.int0(box1)
     mid = 0
     if min_area > 50 and not weird_shape:
         if doop:
@@ -90,7 +91,8 @@ def calibratePlaque(source_image):
     # remove color from image
     gray = CustomImage.Image(image, copy=True)
     gray.gray()
-    gray.thresh(thresh_num=50)
+    gray.image = cv2.medianBlur(gray.image, 7)
+    # gray.thresh(thresh_num=100)
     contours = canny_edge_and_contours(gray)
     # lets show an image of the contours, they each have a name
     # and a radio button to choose the right one
@@ -197,64 +199,73 @@ def canny_edge_and_contours(source_image, *, threshold_1=50, threshold_2=250):
     _, contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return contours
 
-def markPlaque(source_image, *, good_ht, good_wd, do_crop=False, _debug_mode=False, _save=None):
+def get_plaques_matching_ratio(source_image_location, *, good_area, good_ht, good_wd, save_directory, do_crop=False, _debug_mode=False):
     '''
     source_image: CustomImage object
     good_ratio: best ratio for a plaque
     good_area: approximation of a good size for a plaque
     '''
+    # open file and load it up 
+    image = CustomImage.Image(source_image_location)
+    source_directory, source_file_name = os.path.split(source_image_location)
+    # set up payload
+    return_value = []
     # set up boundaries for height and width
-    # print(f'{_debug_mode}\n')
     min_ht = 0.85*good_ht
     max_ht = 1.15*good_ht
     min_wid = 0.85*good_wd
     max_wid = 1.15*good_wd
 
-    if isinstance(source_image, CustomImage.Image):
-        image = source_image
-    else:
-        image = CustomImage.Image(source_image)
     clean_copy = CustomImage.Image(image)
+    dirty_copy = CustomImage.Image(image)
     gray = CustomImage.Image(image)
     gray.gray()
-    
-    # gray.blur()
-    # gray.image = cv2.Laplacian(gray.image, cv2.CV_64F)
-    # gray.image = cv2.Sobel(gray.image, cv2.CV_64F, 1, 0, ksize=5)
-    # gray.image = cv2.Sobel(gray.image, cv2.CV_64F, 0, 1, ksize=1)
-    # gray.image = gray.image.astype(np.uint8)
-    # gray.blur()
-    ################################################# DANGER ZONE
-    # ZONA PELIGROSA ############################################
-    # to run through more thresholds ############################
-    thr_vals = [150, 175, 200, 225, 250]
-    for val in thr_vals:
-        gary = CustomImage.Image(gray)
-        gary.thresh(thresh_num=val)
+
+    # blur and threshold
+    median_blur = cv2.medianBlur(gray.image, 9)
+    _, thresholded = cv2.threshold(gray.image, 175, 255, cv2.THRESH_BINARY)
+    blur_contours = canny_edge_and_contours(median_blur)
+    thresh_contours = canny_edge_and_contours(thresholded)
+
+    for i, c in enumerate(blur_contours):
+        # 0) get contour information
+        peri = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, 0.04*peri, True)
+        M = cv2.moments(c)
+        contour_area = float(M['m00'])
+        # 1) get minimum bounding rectangle
+        min_rec_x, min_rec_y, min_rec_w, min_rec_h = cv2.boundingRect(c)
+        min_rec_area = min_rec_h * min_rec_w
+        # optionally show it
         if _debug_mode:
-            image = CustomImage.Image(gary)
-            image.addColor()
-        contours = canny_edge_and_contours(gary) #, threshold_1=10, threshold_2=200)
-        counter = 0
-        for c in contours:
-            peri = cv2.arcLength(c, True)
-            approx = cv2.approxPolyDP(c, 0.04*peri, True)
-            # shape = detectShape(approx)
-            # if shape is "Quadrilateral":
-            if len(approx) == 4:
-                contour_area, (c_width, c_height), (_x, _y) = drawSingleContour(image.image, c, to_draw=_debug_mode)
-                # minred_area, mrhw, bounds = drawSingleMinRec(image.image, c)
+            cv2.rectangle(dirty_copy.image, (min_rec_x,min_rec_y), (min_rec_x+min_rec_w, min_rec_y+min_rec_h), (10, 0, 225), -1)
+            cv2.drawContours(dirty_copy.image, [approx], -1, (0, 125, 255), 4)
+            HT.showKill(dirty_copy.image, title="points and min bounding rectangle")
+        # 2) compare that area with good area/ratio supplied to function
+        ratio_good_to_maybe = min(good_area / contour_area, contour_area / good_area) if good_area != 0 and contour_area != 0 else 0
+        # 3) if it is close enough (greater than .80), skew and crop to get proper h/w
+        if ratio_good_to_maybe > .30:
+            payload = ImageDetectionMetadata()
+            # self.contour_area = 0.0
+            # self.reference_area = 0.0
+            # self.image = None
+            # self.text = ''
+            # self.pose_information = None
+            # self.source_image_location = ''
+            # self.other = {}
+            rect_points = numpy.array([x[0] for x in approx])
+            payload.image = HT.four_point_transform(clean_copy.image, rect_points)
+            payload.contour_area = contour_area
+            payload.reference_area = good_area
+            payload.source_image_location = source_image_location
+            payload.plaque_image_location = os.path.join(save_directory, f"{i}_" + source_file_name)
+            return_value.append(payload)
+            cv2.imwrite(payload.plaque_image_location, payload.image)
 
-                if HT.betwixt(min_wid, c_width, max_wid) and HT.betwixt(min_ht, c_height, max_ht):
-                    # print("this one is good\n")
-                    _, (_w, _h), (_x, _y) = drawSingleContour(image.image, c, color=(255, val, val-90))
-                    if do_crop:
-                        crop = CustomImage.Image(clean_copy.image[_y:_y+_h, _x:_x+_w, :])
-                        file_path = f"{_save}{counter}.png"
-                        crop.save(file_path=file_path)
-                        counter += 1
+            if _debug_mode:
+                HT.showKill(payload.image, title="cropped plaque (i hope)")
+    return return_value
 
-    return image.image
 
 def readPlaque(crop):
     '''
@@ -264,7 +275,7 @@ def readPlaque(crop):
     gray.gray()
     # gray.blur()
     gray.thresh(thresh_num=200)
-    # kernel = np.ones((25, 25), np.uint8)
+    # kernel = numpy.ones((25, 25), numpy.uint8)
     gray.blur(kernel=(3, 3))
     # gray.show()
     # closed = cv2.morphologyEx(gray.image, cv2.MORPH_CLOSE, kernel)

@@ -1,1 +1,0 @@
-rosnode list: show active nodes

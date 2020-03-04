@@ -8,6 +8,7 @@ import random
 import numpy as np
 import platform
 import CustomErrors as cerr
+from skimage import exposure
 
 class Image(object):
     '''Base class for custom images. Trying hand at pythonic polymorphism.

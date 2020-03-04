@@ -6,14 +6,18 @@ https://circuitdigest.com/microcontroller-projects/optical-character-recognition
 [open] -> [size] -> [gray] -> [blur] -> [edges] -> [contours] -> [crop] -> [OCR]
 * can use the human-interaction which dictates whaich size of rectangle to grab fopr a session
 
-Tuesday: automation
+Tuesday:
+https://scikit-image.org/docs/stable/api/skimage.exposure.html -> smarter grays
+* rework markPlaque in ShapeDetection to take and return things properly
+* finish man-interaction pipeline
 * use feature-free ur-image to provide 'human input' ( proper camera location, with obvious plaque in center for calibration)
 * HOG and other image dectector 
     * https://stackoverflow.com/a/37005437
     * https://docs.opencv.org/2.4/modules/gpu/doc/object_detection.html
+    * https://www.pyimagesearch.com/2015/11/16/hog-detectmultiscale-parameters-explained/
 
 Wednesday: 
-* install and ??? with keras
+* ???
 
 Thursday:
 * ???
