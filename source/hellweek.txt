@@ -23,8 +23,13 @@ Wednesday:
     getting lots on noise from current dataset, given that they are variant in shooting angle
 
 Thursday:
-* train HOG to find plaques
-* ???
+* train HOG to find plaques: https://www.hackevolve.com/create-your-own-object-detector/
+    * branch of Object-Detector with try/catch
+    * shit takes FOREVER
+* I used the code from above pretty much out of the box. I added a try/catch and the ability to save the images.
+    next step is to integrate it with the pipeline:
+        instead of user choosing an image, this will pick the ROI and crop it, and the program will then continue with the 
+        cropped image instead of the whole image.
 
 Friday:
-* ???
+* remove fileIO from the pipeline and make it more modular so we can swap the components

@@ -16,19 +16,20 @@ def plot_multiple_images(results):
         if meta.text and meta.thresheld_image:
             labels_and_images.extend([(meta.text[n], meta.thresheld_image[n]) for n in range(len(meta.text))])
     total_number = len(labels_and_images)
-    num_iterations = math.ceil(total_number / 25)
+    num_imgs = 36
+    num_iterations = math.ceil(total_number / num_imgs)
     # rows = math.ceil(math.sqrt(numgs))
     # cols = math.ceil(numgs / rows)
-    rows = 5
-    cols = 5
+    rows = 6
+    cols = 6
     for n in range(num_iterations):
         fig = plt.figure(facecolor='gray')
-        for idx, title_img_tup in enumerate(labels_and_images[n*20:n*20+20]):
+        for idx, title_img_tup in enumerate(labels_and_images[n * num_imgs:n * num_imgs + num_imgs]):
             # print(title_img_tup)
             sp = fig.add_subplot(cols, rows, idx + 1)
             # image = cv2.resize(title_img_tup[1], (title_img_tup[1].shape[1]//3, title_img_tup[1].shape[0]//3), interpolation=cv2.INTER_AREA)
             image = title_img_tup[1]
-            # image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
             plt.imshow(numpy.array(image, dtype=float))
             sp.set_title(title_img_tup[0])
             sp.set_yticklabels([])
@@ -41,15 +42,14 @@ def plot_multiple_images(results):
 
 def main(args):
     # 1) get value from sample calibration image
-    calib = CI.Image.open(args['calibration_image'])
-    # gray = CI.Image(calib, copy=True)
-    # gray.gray()
-    calib_result = SD.calibratePlaque(calib)
-    area = calib_result.get('contour_area')
-    # ratio = calib_result.get('ratio')
-    width = calib_result.get('contour_w')
-    height = calib_result.get('contour_h')
-    bl, tl, tr, br = calib_result.get('bl_tl_tr_br')
+    if args['use_calibration']:
+        calib = CI.Image.open(args['calibration_image'])
+        calib_result = SD.calibratePlaque(calib)
+        area = calib_result.get('contour_area')
+        # ratio = calib_result.get('ratio')
+        width = calib_result.get('contour_w')
+        height = calib_result.get('contour_h')
+        bl, tl, tr, br = calib_result.get('bl_tl_tr_br')
     # 3) loop over images in a directory, outputting the names of positive and negative images
     files_to_check = HT.getFilesInDirectory(args['directory'], '.jpg')
     # TODO: below steps can be optimized with text recognition happpening over the returned list
@@ -72,7 +72,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--calibration-image", required=True, help="image to calibrate images in directory")
+    parser.add_argument("-c", "--calibration-image", required=False, help="image to calibrate images in directory")
+    parser.add_argument("--use-calibration", required=True, default=False, help="image to calibrate images in directory")
     parser.add_argument("-d", "--directory", required=True, help="location of images to be tested")
     parser.add_argument("-s", "--save-directory", required=True, help="where output plaque images will be saved")
     parser.add_argument("-g", "--debug", required=False, default=False, type=bool, help="print everything?")
