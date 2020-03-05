@@ -5,11 +5,23 @@ import cv2
 import argparse
 import numpy
 
+
 def getFilesInDirectory(directory, fileType):
     return [os.path.join(directory, item) for item in os.listdir(directory) if item.lower().endswith(fileType)]
 
+
+def resize_files_in_directory(rs_factor, directory, outdir):
+    files = getFilesInDirectory(directory, 'jpg')
+    for f in files:
+        img = cv2.imread(f)
+        rs = cv2.resize(img, (img.shape[1]//rs_factor, img.shape[0]//rs_factor), interpolation=cv2.INTER_AREA)
+        fn = os.path.join(outdir, os.path.split(f)[1])
+        cv2.imwrite(fn, rs)
+
+
 def hiLow255(num):
     return 0 if num > 122 else 255
+
 
 def showKill(image, *, title=None):
     '''takes cv2 image and shows it.
@@ -23,19 +35,21 @@ def showKill(image, *, title=None):
             ks=cv2.waitKey(1000)
             try:
                 status = cv2.getWindowProperty(title,cv2.WND_PROP_VISIBLE)
-            except Exception as e:
+            except Exception:
                 status = -1
                 break
             if ks > 0:
                 break
         cv2.destroyWindow(title)
     except Exception as e:
-        print("error occured: {}",e)
+        print("error occured: {}", e)
         raise
+
 
 def betwixt(less_num, target, great_num):
     '''true if target falss between less_num and great_num'''
     return(less_num < target and target < great_num)
+
 
 def add_prefix_to_file(filepath, prefix):
     '''
@@ -48,6 +62,7 @@ def add_prefix_to_file(filepath, prefix):
     changed_path = os.path.join(directory, file_name)
     return changed_path
 
+
 def str2bool(word):
     '''
     from 'Maxim's response to https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
@@ -59,6 +74,7 @@ def str2bool(word):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected. Very disappointed')
+
 
 def distill_list(list_of_elements):
     '''

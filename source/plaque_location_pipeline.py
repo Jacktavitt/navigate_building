@@ -2,6 +2,7 @@
 import argparse
 import math
 import numpy
+import cv2
 import matplotlib.pyplot as plt
 import ShapeDetection as SD
 import CustomImage as CI
@@ -11,25 +12,31 @@ import TextReading as TR
 
 def plot_multiple_images(results):
     labels_and_images = []
-    # print(type(results), str(results))
-    for f in results:
-        for idx, meta in enumerate(results[f]):
-            print(f"text: {meta.text}\n img: {meta.thresheld_image}")
-            if meta.text and meta.thresheld_image:
-                labels_and_images.append((meta.text[0], meta.thresheld_image[0]))
-    numgs = len(labels_and_images)
-    rows = math.ceil(math.sqrt(numgs))
-    cols = math.ceil(numgs / rows)
-    fig = plt.figure()
-    for idx, title_img_tup in enumerate(labels_and_images):
-        print(title_img_tup)
-        sp = fig.add_subplot(cols, rows, idx + 1)
-        plt.imshow(numpy.array(title_img_tup[1], dtype=float))
-        sp.set_title(title_img_tup[0])
-        sp.set_yticklabels([])
-        sp.set_xticklabels([])
-    fig.set_size_inches(numpy.array(fig.get_size_inches()) * numgs)
-    plt.show()
+    for meta in results:
+        if meta.text and meta.thresheld_image:
+            labels_and_images.extend([(meta.text[n], meta.thresheld_image[n]) for n in range(len(meta.text))])
+    total_number = len(labels_and_images)
+    num_iterations = math.ceil(total_number / 25)
+    # rows = math.ceil(math.sqrt(numgs))
+    # cols = math.ceil(numgs / rows)
+    rows = 5
+    cols = 5
+    for n in range(num_iterations):
+        fig = plt.figure(facecolor='gray')
+        for idx, title_img_tup in enumerate(labels_and_images[n*20:n*20+20]):
+            # print(title_img_tup)
+            sp = fig.add_subplot(cols, rows, idx + 1)
+            # image = cv2.resize(title_img_tup[1], (title_img_tup[1].shape[1]//3, title_img_tup[1].shape[0]//3), interpolation=cv2.INTER_AREA)
+            image = title_img_tup[1]
+            # image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+            plt.imshow(numpy.array(image, dtype=float))
+            sp.set_title(title_img_tup[0])
+            sp.set_yticklabels([])
+            sp.set_xticklabels([])
+        # fig.set_size_inches(numpy.array(fig.get_size_inches()) * numgs)
+        fig.set_size_inches(numpy.array(fig.get_size_inches()) * 20)
+        plt.show()
+        # plt.savefig(f'/home/johnny/Documents/plaque_grab_3-4/pyplot_test/plaque_plot_simp_{n}.png')
 
 
 def main(args):
@@ -47,16 +54,18 @@ def main(args):
     files_to_check = HT.getFilesInDirectory(args['directory'], '.jpg')
     # TODO: below steps can be optimized with text recognition happpening over the returned list
     # we get a dict of file names, with each filename having a list of metadata
-    results = {f: SD.get_plaques_matching_ratio(f,
-                                                good_area=area,
-                                                good_ht=height,
-                                                good_wd=width,
-                                                save_directory=args['save_directory'],
-                                                _debug_mode=args['debug']) for f in files_to_check}
+    results = []
+    for f in files_to_check:
+        results.extend(SD.get_plaques_matching_ratio(f,
+                                                     good_area=area,
+                                                     good_ht=height,
+                                                     good_wd=width,
+                                                     save_directory=args['save_directory'],
+                                                     _debug_mode=args['debug']))
     # 4) after successfull plaque grabbing, use open and image stuff to get a bounding box around just the words, and send that to ocr
-    for f in results:
-        for idx, meta in enumerate(results[f]):
-            results[f][idx].text, results[f][idx].thresheld_image = TR.tess_from_file(results[f][idx].plaque_image_location)
+    for idx, meta in enumerate(results):
+        results[idx].text, results[idx].thresheld_image = TR.tess_from_file(results[idx].plaque_image_location)
+
     # 5) evaluate performance for images with matching calb image and those with mismatched calibrtation image
     plot_multiple_images(results)
 

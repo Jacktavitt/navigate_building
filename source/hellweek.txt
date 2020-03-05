@@ -17,9 +17,13 @@ https://scikit-image.org/docs/stable/api/skimage.exposure.html -> smarter grays
     * https://www.pyimagesearch.com/2015/11/16/hog-detectmultiscale-parameters-explained/
 
 Wednesday: 
-* ???
+* Running pipeline with simpel ROI detection (bounding boxes) and east (from pyimagesearch).
+    east seems to do a better job of grabbing the interest areas. Both could benefit from only grabbing the largest area in the image.
+* hump day.
+    getting lots on noise from current dataset, given that they are variant in shooting angle
 
 Thursday:
+* train HOG to find plaques
 * ???
 
 Friday:
