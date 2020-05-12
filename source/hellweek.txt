@@ -33,3 +33,6 @@ Thursday:
 
 Friday:
 * remove fileIO from the pipeline and make it more modular so we can swap the components
+* plot results in real vs not real for detecting a plaque?
+* add timing to each step and put it int he metadata
+* better OCR: https://medium.com/capital-one-tech/learning-to-read-computer-vision-methods-for-extracting-text-from-images-2ffcdae11594

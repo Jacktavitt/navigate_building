@@ -19,6 +19,17 @@ def resize_files_in_directory(rs_factor, directory, outdir):
         cv2.imwrite(fn, rs)
 
 
+def crop_image(image, x, y, xb, yb):
+    copy = image.copy()
+    return copy[y:yb, x:xb, :]
+
+
+def show(image):
+    cv2.imshow("image", image)
+    cv2.waitKey()
+    cv2.destroyWindow("image")
+
+
 def hiLow255(num):
     return 0 if num > 122 else 255
 

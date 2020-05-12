@@ -180,7 +180,66 @@ def canny_edge_and_contours(source_image, *, threshold_1=50, threshold_2=250):
     return contours
 
 
-def get_plaques_matching_ratio(source_image_location, *, good_area, good_ht, good_wd, save_directory, do_crop=False, _debug_mode=False):
+def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_mode=False, use_biggest_contour=False, _fileio=False):
+    '''
+    source_image: CustomImage object
+    good_ratio: best ratio for a plaque
+    good_area: approximation of a good size for a plaque
+    '''
+    # open file and load it up
+    image = cv2.imread(source_image_location)
+    dirty_copy = image.copy()
+    # print(f"image size: {image.size} from location {source_image_location}")
+    if image.size < 1 or dirty_copy.size < 1:
+        return []
+    source_directory, source_file_name = os.path.split(source_image_location)
+    # set up payload
+    return_value = []
+    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    predictions = hog.predict(rgb_image)
+    for pi, (x, y, xb, yb) in enumerate(predictions):
+        # 1) for each prediction, grab the plaque image insaide. this will likely be the largest contour.
+        cropped_roi = HT.crop_image(dirty_copy, x, y, xb, yb)
+        if cropped_roi.size < 1:
+            continue
+        gray = cv2.cvtColor(cropped_roi, cv2.COLOR_BGR2GRAY)
+        # 2) blur and contour
+        median_blur = cv2.medianBlur(gray, 9)
+        contours = canny_edge_and_contours(median_blur)
+        # 3) get the biggest contour
+        if use_biggest_contour:
+            contour_areas = [cv2.moments(c)['m00'] for c in contours]
+            print(f"contour areas: {contour_areas}")
+            if not contour_areas:
+                continue
+            location_of_biggest = contour_areas.index(max(contour_areas)) if len(contour_areas) > 1 else 0
+            big_countour = contours[location_of_biggest]
+            contours = [big_countour]
+        for ci, c in enumerate(contours):
+            approx = cv2.approxPolyDP(c, 0.04 * cv2.arcLength(c, True), True)
+            rect_points = numpy.array([x[0] for x in approx])
+
+            payload = ImageDetectionMetadata()
+            payload.image = HT.four_point_transform(cropped_roi, rect_points)
+            payload.contour_area = float(cv2.moments(c)['m00'])
+            payload.reference_area = None
+            payload.source_image_location = source_image_location
+            if _debug_mode:
+                cv2.rectangle(dirty_copy, (x, y), (xb, yb), (10, 0, 225), -1)
+                cv2.imshow("predicted region", dirty_copy)
+                cv2.imshow("cropped area", cropped_roi)
+                cv2.imshow("corrected contour", dirty_copy)
+                cv2.waitKey()
+                cv2.destroyAllWindows()
+            if _fileio:
+                payload.plaque_image_location = os.path.join(save_directory, f"{pi}_{ci}" + source_file_name)
+                cv2.imwrite(payload.plaque_image_location, payload.image)
+            return_value.append(payload)
+
+    return return_value
+
+
+def get_plaques_matching_ratio(source_image_location, *, save_directory, good_area, _debug_mode=False, _fileio=False):
     '''
     source_image: CustomImage object
     good_ratio: best ratio for a plaque
@@ -191,11 +250,6 @@ def get_plaques_matching_ratio(source_image_location, *, good_area, good_ht, goo
     source_directory, source_file_name = os.path.split(source_image_location)
     # set up payload
     return_value = []
-    # set up boundaries for height and width
-    min_ht = 0.85*good_ht
-    max_ht = 1.15*good_ht
-    min_wid = 0.85*good_wd
-    max_wid = 1.15*good_wd
 
     clean_copy = CustomImage.Image(image)
     dirty_copy = CustomImage.Image(image)
@@ -205,7 +259,7 @@ def get_plaques_matching_ratio(source_image_location, *, good_area, good_ht, goo
     # blur and threshold
     median_blur = cv2.medianBlur(gray.image, 9)
     blur_contours = canny_edge_and_contours(median_blur)
-
+    debug_copy = dirty_copy.image.copy()
     for i, c in enumerate(blur_contours):
         # 0) get contour information
         peri = cv2.arcLength(c, True)
@@ -214,25 +268,29 @@ def get_plaques_matching_ratio(source_image_location, *, good_area, good_ht, goo
         contour_area = float(M['m00'])
         # 1) get minimum bounding rectangle
         min_rec_x, min_rec_y, min_rec_w, min_rec_h = cv2.boundingRect(c)
-        # optionally show it
-        if _debug_mode:
-            cv2.rectangle(dirty_copy.image, (min_rec_x, min_rec_y), (min_rec_x + min_rec_w, min_rec_y + min_rec_h), (10, 0, 225), -1)
-            cv2.drawContours(dirty_copy.image, [approx], -1, (0, 125, 255), 4)
-            HT.showKill(dirty_copy.image, title="points and min bounding rectangle")
         # 2) compare that area with good area/ratio supplied to function
         ratio_good_to_maybe = min(good_area / contour_area, contour_area / good_area) if good_area != 0 and contour_area != 0 else 0
-        # 3) if it is close enough (greater than .80), skew and crop to get proper h/w
+        # 3) if it is close enough, skew and crop to get proper h/w
         if ratio_good_to_maybe > .30:
+
+            if _debug_mode:
+                cv2.rectangle(debug_copy, (min_rec_x, min_rec_y), (min_rec_x + min_rec_w, min_rec_y + min_rec_h), (10, 0, 225), 2)
+                cv2.putText(debug_copy, 'plaque', (min_rec_x + 5, min_rec_y - 5), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (128, 255, 0), 2)
+
             payload = ImageDetectionMetadata()
             rect_points = numpy.array([x[0] for x in approx])
             payload.image = HT.four_point_transform(clean_copy.image, rect_points)
             payload.contour_area = contour_area
             payload.reference_area = good_area
             payload.source_image_location = source_image_location
-            payload.plaque_image_location = os.path.join(save_directory, f"{i}_" + source_file_name)
+            if _fileio:
+                payload.plaque_image_location = os.path.join(save_directory, f"{i}_" + source_file_name)
+                cv2.imwrite(payload.plaque_image_location, payload.image)
             return_value.append(payload)
-            cv2.imwrite(payload.plaque_image_location, payload.image)
 
-            if _debug_mode:
-                HT.showKill(payload.image, title="cropped plaque (i hope)")
+    if _debug_mode:
+        cv2.imshow(f"points for area {contour_area}", debug_copy)
+        cv2.waitKey()
+        cv2.destroyWindow(f"points for area {contour_area}")
+
     return return_value

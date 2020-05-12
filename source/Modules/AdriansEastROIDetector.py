@@ -33,20 +33,19 @@ def detect_ranges_with_east(image, width, height, east, min_confidence):
         "feature_fusion/concat_3"]
 
     # load the pre-trained EAST text detector
-    print("[INFO] loading EAST text detector...")
+    # print("[INFO] loading EAST text detector...")
     net = cv2.dnn.readNet(east)
 
     # construct a blob from the image and then perform a forward pass of
     # the model to obtain the two output layer sets
-    blob = cv2.dnn.blobFromImage(image, 1.0, (W, H),
-        (123.68, 116.78, 103.94), swapRB=True, crop=False)
+    blob = cv2.dnn.blobFromImage(image, 1.0, (W, H), (123.68, 116.78, 103.94), swapRB=True, crop=False)
     start = time.time()
     net.setInput(blob)
     (scores, geometry) = net.forward(layerNames)
     end = time.time()
 
     # show timing information on text prediction
-    print("[INFO] text detection took {:.6f} seconds".format(end - start))
+    # print("[INFO] text detection took {:.6f} seconds".format(end - start))
 
     # grab the number of rows and columns from the scores volume, then
     # initialize our set of bounding box rectangles and corresponding
@@ -119,9 +118,6 @@ def detect_ranges_with_east(image, width, height, east, min_confidence):
         regions.append([(startX, startY), (endX, endY),
                         (startX, endY), (endX, startY)])
         drawn_images.append(orig)
-    # show the output image
-    # cv2.imshow("Text Detection", orig)
-    # cv2.waitKey(0)
     return regions, drawn_images
 
 

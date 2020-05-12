@@ -20,6 +20,14 @@ def tess_from_file(image_location):
     return texts, threshses
 
 
+def tess_from_image(source_image):
+    # 1) open image
+    image = source_image.copy()
+    # texts, threshses = get_text_with_tess(image)
+    texts, threshses = get_text_with_aerd(image)
+    return texts, threshses
+
+
 def get_text_with_tess(image):
     thresh_list = []
     text_list = []
@@ -32,7 +40,7 @@ def get_text_with_tess(image):
     _, contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # approx = cv2.approxPolyDP(contours[0], 0.04 * cv2.arcLength(contours[0], True), True)
     contour_areas = [cv2.moments(c)['m00'] for c in contours]
-    print(f"contour areas: {contour_areas}")
+    # print(f"contour areas: {contour_areas}")
     if not contour_areas:
         return [], []
     location_of_biggest = contour_areas.index(max(contour_areas)) if len(contour_areas) > 1 else 0
@@ -54,7 +62,7 @@ def get_text_with_tess(image):
     # pil_image = Image.fromarray(thresh2)
     pil_image = cv2.cvtColor(thresh2, cv2.COLOR_GRAY2RGB)
     text = pytesseract.image_to_string(pil_image, config="-l eng --psm 9")
-    text_list.append(text)
+    text_list.append(text.lower())
     thresh_list.append(thresh2)
     # for c in contours:
     #     min_rec_x, min_rec_y, min_rec_w, min_rec_h = cv2.boundingRect(c)
@@ -91,15 +99,12 @@ def get_text_with_aerd(image):
     rois, drawn_rois = aerd.detect_ranges_with_east(image, width, height, east, min_confidence)
     for i, r in enumerate(rois):
         rect_points = numpy.array(r)
+        # TODO: switch the trnaform to simple crop
         text_crop = HT.four_point_transform(gray, rect_points)
-        # cv2.imshow("DRAWN", drawn_rois[i])
-        # cv2.imshow("CROPPED", text_crop)
-        # cv2.imshow("GRAY", gray)
-        # cv2.waitKey(0)
         _, thresh2 = cv2.threshold(text_crop, 100, 255, cv2.THRESH_BINARY)
         # 5) use pytesseract
         pil_image = cv2.cvtColor(thresh2, cv2.COLOR_GRAY2RGB)
         text = pytesseract.image_to_string(pil_image, config="-l eng --psm 9")
-        text_list.append(text)
+        text_list.append(text.lower())
         thresh_list.append(thresh2)
     return text_list, thresh_list
