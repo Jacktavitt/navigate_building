@@ -19,4 +19,4 @@ source/**/nn_data/
 *.h5
 frozen_east_text_detection.pb
 *.npy
-*.ipynb_c
+*.ipynb_checkpoints/
