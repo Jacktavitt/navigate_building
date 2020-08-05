@@ -180,7 +180,7 @@ def canny_edge_and_contours(source_image, *, threshold_1=50, threshold_2=250):
     return contours
 
 
-def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_mode=False, use_biggest_contour=False, _fileio=False):
+def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_mode=False, use_biggest_contour=False, _fileio=True):
     '''
     source_image: CustomImage object
     good_ratio: best ratio for a plaque
@@ -200,6 +200,7 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
     for pi, (x, y, xb, yb) in enumerate(predictions):
         # 1) for each prediction, grab the plaque image insaide. this will likely be the largest contour.
         cropped_roi = HT.crop_image(dirty_copy, x, y, xb, yb)
+        # single dimension numpy array (junk)
         if cropped_roi.size < 1:
             continue
         gray = cv2.cvtColor(cropped_roi, cv2.COLOR_BGR2GRAY)
@@ -209,16 +210,16 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
         # 3) get the biggest contour
         if use_biggest_contour:
             contour_areas = [cv2.moments(c)['m00'] for c in contours]
-            print(f"contour areas: {contour_areas}")
             if not contour_areas:
+                print("empty contour areas for biggest contour")
                 continue
+            print(f"contour areas: {contour_areas}")
             location_of_biggest = contour_areas.index(max(contour_areas)) if len(contour_areas) > 1 else 0
             big_countour = contours[location_of_biggest]
             contours = [big_countour]
         for ci, c in enumerate(contours):
             approx = cv2.approxPolyDP(c, 0.04 * cv2.arcLength(c, True), True)
             rect_points = numpy.array([x[0] for x in approx])
-
             payload = ImageDetectionMetadata()
             payload.image = HT.four_point_transform(cropped_roi, rect_points)
             payload.contour_area = float(cv2.moments(c)['m00'])

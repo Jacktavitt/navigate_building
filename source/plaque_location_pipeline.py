@@ -71,8 +71,6 @@ def main(args):
             results.extend(SD.get_plaques_with_hog(f, hog=detector, save_directory=args['save_directory'], _debug_mode=args['debug']))
 
     # 4) after successfull plaque grabbing, use open and image stuff to get a bounding box around just the words, and send that to ocr
-    # for idx, meta in enumerate(results):
-    #     results[idx].text, results[idx].thresheld_image = TR.tess_from_file(results[idx].plaque_image_location)
     for idx, meta in tqdm(enumerate(results), desc="reading text from cropped images"):
         results[idx].text, results[idx].thresheld_image = TR.tess_from_image(results[idx].image)
 
@@ -104,7 +102,7 @@ def evaluate_performance(results):
     results_numpy_array = numpy.array([r.to_list() for r in results])
     results_df = pandas.DataFrame(results_numpy_array, columns=headers)
     # hacky fix until we get some pose info
-    results_df['pose_info'] = results_df['source_image_location'].apply(lambda x: float(os.path.split(x)[1].split('-')[0].replace('DSC', '0.')))
+    results_df['pose_info'] = None  # results_df['source_image_location'].apply(lambda x: float(os.path.split(x)[1].split('-')[0].replace('DSC', '0.')))
     results_df.to_pickle('/home/johnny/Documents/performance_metrics_3-6/hog_result_df.pkl')
 
 

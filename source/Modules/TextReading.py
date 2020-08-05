@@ -64,31 +64,12 @@ def get_text_with_tess(image):
     text = pytesseract.image_to_string(pil_image, config="-l eng --psm 9")
     text_list.append(text.lower())
     thresh_list.append(thresh2)
-    # for c in contours:
-    #     min_rec_x, min_rec_y, min_rec_w, min_rec_h = cv2.boundingRect(c)
-    #     rect_points = numpy.array([(min_rec_x, min_rec_y),
-    #                                (min_rec_x, min_rec_y + min_rec_h),
-    #                                (min_rec_x + min_rec_w, min_rec_y),
-    #                                (min_rec_x + min_rec_w, min_rec_y + min_rec_h)])
-    #     # 3) get crop of text
-    #     # text_crop = HT.four_point_transform(image, rect_points)
-    #     # # 4) threshold and binarize the text
-    #     # _, thresh2 = cv2.threshold(cv2.cvtColor(text_crop, cv2.COLOR_BGR2GRAY), 100, 255, cv2.THRESH_BINARY)
-    #     text_crop = HT.four_point_transform(gray, rect_points)
-    #     # 4) threshold and binarize the text
-    #     _, thresh2 = cv2.threshold(text_crop, 100, 255, cv2.THRESH_BINARY)
-    #     # 5) use pytesseract
-    #     # pil_image = Image.fromarray(thresh2)
-    #     pil_image = cv2.cvtColor(thresh2, cv2.COLOR_GRAY2RGB)
-    #     text = pytesseract.image_to_string(pil_image, config="-l eng --psm 9")
-    #     text_list.append(text)
-    #     thresh_list.append(thresh2)
-    # if meta:
-    #     meta.text = [x for x in text_list if x]
+
     return text_list, thresh_list
 
 
 def get_text_with_aerd(image):
+    # uses the east algortithm
     thresh_list = []
     text_list = []
     east = '/home/johnny/Documents/navigate_building/frozen_east_text_detection.pb'
