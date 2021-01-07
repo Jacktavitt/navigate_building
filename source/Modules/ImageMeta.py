@@ -1,6 +1,9 @@
 import numpy
 import re
 
+with open('/home/johnny/Documents/navigate_building/source/assets/images_with_plaques.txt') as f:
+    LIST_OF_POSITIVES = f.read().split('\n')
+
 
 class ImageDetectionMetadata():
     headers = ['label', 'parsed_text', 'found_contour_area', 'ref_contour_area', 'source_image_location', 'image_has_plaque', 'plaque_found', 'text_matched', 'text_missed', 'text_misread']
@@ -33,7 +36,7 @@ class ImageDetectionMetadata():
         """
         creates explicitly-ordered list of elements in the object
         """
-        has_plaque = True if 'POSITIVE' in self.source_image_location else False
+        has_plaque = True if self.source_image_location in LIST_OF_POSITIVES else False
         plaque_found = True if self.contour_area > 0 else False
         self.label = [x.replace('-', '') for x in re.findall(r"-[0-9,a-z]*-", self.source_image_location)]
         matched = list(set(self.text) & set(self.label))

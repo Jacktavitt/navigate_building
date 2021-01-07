@@ -8,7 +8,11 @@ import os
 import tkinter as tk
 import string
 from ImageMeta import ImageDetectionMetadata
+import logging
 ALL_CHARS = string.ascii_letters + string.digits
+
+logging.basicConfig(format='[%(asctime)s] <%(func)s> : %(message)s', filename='wholerun.log', level=logging.INFO)
+logger = logging.getLogger('wholerun')
 
 
 def drawSingleContour(image, c, *, text=None, color=(0, 125, 255), to_draw=True):
@@ -57,10 +61,10 @@ def drawSingleMinRec(image, c, *, doop=None):
     if min_area > 50 and not weird_shape:
         if doop:
             for count, item in enumerate(box):
-                print(f'#{count}: {item}\n')
+                logger.info(f'#{count}: {item}\n')
                 cv2.circle(image, (item[0], item[1]), 10, (mid, 255 - mid, 255), 3)
                 mid += 55
-            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+            logger.info('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         cv2.drawContours(image, [box], 0, (100, 0, 255), 2)
         cv2.putText(image, (f'area: {min_area}'), (bl[0], bl[1]), cv2.FONT_HERSHEY_SIMPLEX,
                     .75, (125, 125, 255), 2)
@@ -111,21 +115,21 @@ def calibratePlaque(source_image):
     chosen.trace('w', simpleCallBack)
 
     def showChoice():
-        print(chosen.get())
+        logger.info(chosen.get())
 
     def CloseWindow():
-        print(f"close window!")
+        logger.info(f"close window!")
         if chosen.get():
             window.destroy()
 
     numbad = 0
     numgood = 0
     for idx, contour in enumerate(contours):
-        # print(f'idx: {idx}, lencont: {len(contour)}\n')
+        # logger.info(f'idx: {idx}, lencont: {len(contour)}\n')
         try:
             label = ALL_CHARS[numgood]
         except Exception as e:
-            print(e)
+            logger.error(e)
             label = 'TILT'
 
         areas[idx] = {}
@@ -156,13 +160,13 @@ def calibratePlaque(source_image):
     tk.Button(window, text="CONFIRM SELECTION", image=PIXEL, command=CloseWindow, compound='c', width=(image.get_width())).pack(side='top')
     window.mainloop()
 
-    print(f"chosen item: {chosen.get()} in the result:{areas[int(chosen.get())]}")
-    # print(f"just for shits: whole area dictionary: {areas}")
+    logger.info(f"chosen item: {chosen.get()} in the result:{areas[int(chosen.get())]}")
+    logger.debug(f"just for shits: whole area dictionary: {areas}")
     return areas[int(chosen.get())]
 
 
 def simpleCallBack(*args):
-    print(f'variable changed {args}')
+    logger.info(f'variable changed {args}')
 
 
 def canny_edge_and_contours(source_image, *, threshold_1=50, threshold_2=250):
@@ -182,23 +186,20 @@ def canny_edge_and_contours(source_image, *, threshold_1=50, threshold_2=250):
 
 def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_mode=False, use_biggest_contour=False, _fileio=True):
     '''
-    source_image: CustomImage object
-    good_ratio: best ratio for a plaque
-    good_area: approximation of a good size for a plaque
     '''
     # open file and load it up
     image = cv2.imread(source_image_location)
     dirty_copy = image.copy()
-    # print(f"image size: {image.size} from location {source_image_location}")
     if image.size < 1 or dirty_copy.size < 1:
+        # either it is a junk image, or the copy failed.
         return []
     source_directory, source_file_name = os.path.split(source_image_location)
     # set up payload
-    return_value = []
+    list_of_plaque_meta_payloads = []
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     predictions = hog.predict(rgb_image)
     for pi, (x, y, xb, yb) in enumerate(predictions):
-        # 1) for each prediction, grab the plaque image insaide. this will likely be the largest contour.
+        # 1) for each prediction, grab the plaque image inside. this will likely be the largest contour.
         cropped_roi = HT.crop_image(dirty_copy, x, y, xb, yb)
         # single dimension numpy array (junk)
         if cropped_roi.size < 1:
@@ -211,10 +212,11 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
         if use_biggest_contour:
             contour_areas = [cv2.moments(c)['m00'] for c in contours]
             if not contour_areas:
-                print("empty contour areas for biggest contour")
+                logger.info("empty contour areas for biggest contour")
                 continue
-            print(f"contour areas: {contour_areas}")
-            location_of_biggest = contour_areas.index(max(contour_areas)) if len(contour_areas) > 1 else 0
+            logger.info(f"contour areas: {contour_areas}")
+            # could this just use a lambda to get the biggest area without splitting it out?
+            location_of_biggest = contour_areas.index(max(contour_areas))
             big_countour = contours[location_of_biggest]
             contours = [big_countour]
         for ci, c in enumerate(contours):
@@ -235,9 +237,9 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
             if _fileio:
                 payload.plaque_image_location = os.path.join(save_directory, f"{pi}_{ci}" + source_file_name)
                 cv2.imwrite(payload.plaque_image_location, payload.image)
-            return_value.append(payload)
+            list_of_plaque_meta_payloads.append(payload)
 
-    return return_value
+    return list_of_plaque_meta_payloads
 
 
 def get_plaques_matching_ratio(source_image_location, *, save_directory, good_area, _debug_mode=False, _fileio=False):
@@ -250,7 +252,7 @@ def get_plaques_matching_ratio(source_image_location, *, save_directory, good_ar
     image = CustomImage.Image(source_image_location)
     source_directory, source_file_name = os.path.split(source_image_location)
     # set up payload
-    return_value = []
+    list_of_plaque_meta_payloads = []
 
     clean_copy = CustomImage.Image(image)
     dirty_copy = CustomImage.Image(image)
@@ -287,11 +289,11 @@ def get_plaques_matching_ratio(source_image_location, *, save_directory, good_ar
             if _fileio:
                 payload.plaque_image_location = os.path.join(save_directory, f"{i}_" + source_file_name)
                 cv2.imwrite(payload.plaque_image_location, payload.image)
-            return_value.append(payload)
+            list_of_plaque_meta_payloads.append(payload)
 
     if _debug_mode:
         cv2.imshow(f"points for area {contour_area}", debug_copy)
         cv2.waitKey()
         cv2.destroyWindow(f"points for area {contour_area}")
 
-    return return_value
+    return list_of_plaque_meta_payloads

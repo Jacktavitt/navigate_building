@@ -15,7 +15,10 @@ import HandyTools as HT
 import TextReading as TR
 from ImageMeta import ImageDetectionMetadata
 from detector import ObjectDetector
+import logging
 
+logging.basicConfig(format='[%(asctime)s] <%(func)s> : %(message)s', filename='wholerun.log', level=logging.INFO)
+logger = logging.getLogger('wholerun')
 
 def plot_multiple_images(results):
     labels_and_images = []
@@ -32,7 +35,7 @@ def plot_multiple_images(results):
     for n in range(num_iterations):
         fig = plt.figure(facecolor='gray')
         for idx, title_img_tup in enumerate(labels_and_images[n * num_imgs:n * num_imgs + num_imgs]):
-            # print(title_img_tup)
+            logger.info(title_img_tup)
             sp = fig.add_subplot(cols, rows, idx + 1)
             # image = cv2.resize(title_img_tup[1], (title_img_tup[1].shape[1]//3, title_img_tup[1].shape[0]//3), interpolation=cv2.INTER_AREA)
             image = title_img_tup[1]
@@ -114,8 +117,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--directory", required=True, help="location of images to be tested")
     parser.add_argument("-s", "--save-directory", required=False, help="where output plaque images will be saved")
     parser.add_argument("--detector", required=False, help="location of trained svm detector")
-    parser.add_argument("-g", "--debug", required=False, default=False, type=bool, help="print everything?")
-    # parser.add_argument("-c", "--calibration", required=True, help="image to calibrate images in directory")
+    parser.add_argument("-g", "--debug", required=False, default=False, type=bool, help="logger.info everything?")
     args = vars(parser.parse_args())
-    print(args)
+    logger.info(args)
     main(args)
