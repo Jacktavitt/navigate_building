@@ -11,7 +11,7 @@ from ImageMeta import ImageDetectionMetadata
 import logging
 ALL_CHARS = string.ascii_letters + string.digits
 
-logging.basicConfig(format='[%(asctime)s] <%(func)s> : %(message)s', filename='wholerun.log', level=logging.INFO)
+logging.basicConfig(format='[%(asctime)s] <%(funcName)s> : %(message)s', filename='wholerun.log', level=logging.INFO)
 logger = logging.getLogger('wholerun')
 
 
@@ -192,7 +192,9 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
     dirty_copy = image.copy()
     if image.size < 1 or dirty_copy.size < 1:
         # either it is a junk image, or the copy failed.
+        logger.info(f"image not valid: {source_image_location}")
         return []
+    logger.info(f"processing file {source_image_location}")
     source_directory, source_file_name = os.path.split(source_image_location)
     # set up payload
     list_of_plaque_meta_payloads = []
@@ -222,11 +224,17 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
         for ci, c in enumerate(contours):
             approx = cv2.approxPolyDP(c, 0.04 * cv2.arcLength(c, True), True)
             rect_points = numpy.array([x[0] for x in approx])
+            logger.info(f"creating payload for file {source_image_location}, with contour number {ci}")
             payload = ImageDetectionMetadata()
+            # take whatever the image may be, and make it a rectangle
             payload.image = HT.four_point_transform(cropped_roi, rect_points)
             payload.contour_area = float(cv2.moments(c)['m00'])
             payload.reference_area = None
             payload.source_image_location = source_image_location
+            if _fileio:
+                payload.plaque_image_location = os.path.join(save_directory, f"{pi}_{ci}" + source_file_name)
+                cv2.imwrite(payload.plaque_image_location, payload.image)
+            list_of_plaque_meta_payloads.append(payload)
             if _debug_mode:
                 cv2.rectangle(dirty_copy, (x, y), (xb, yb), (10, 0, 225), -1)
                 cv2.imshow("predicted region", dirty_copy)
@@ -234,11 +242,10 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
                 cv2.imshow("corrected contour", dirty_copy)
                 cv2.waitKey()
                 cv2.destroyAllWindows()
-            if _fileio:
-                payload.plaque_image_location = os.path.join(save_directory, f"{pi}_{ci}" + source_file_name)
-                cv2.imwrite(payload.plaque_image_location, payload.image)
-            list_of_plaque_meta_payloads.append(payload)
-
+    if not list_of_plaque_meta_payloads:
+        payload = ImageDetectionMetadata()
+        payload.source_image_location = source_image_location
+        list_of_plaque_meta_payloads.append(payload)
     return list_of_plaque_meta_payloads
 
 

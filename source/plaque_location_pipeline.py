@@ -5,6 +5,7 @@ import numpy
 import pandas
 import pickle
 import os
+import datetime
 from tqdm import tqdm
 import cv2
 import matplotlib.pyplot as plt
@@ -17,8 +18,9 @@ from ImageMeta import ImageDetectionMetadata
 from detector import ObjectDetector
 import logging
 
-logging.basicConfig(format='[%(asctime)s] <%(func)s> : %(message)s', filename='wholerun.log', level=logging.INFO)
+logging.basicConfig(format='[%(asctime)s] <%(funcName)s> : %(message)s', filename='wholerun.log', level=logging.INFO)
 logger = logging.getLogger('wholerun')
+
 
 def plot_multiple_images(results):
     labels_and_images = []
@@ -53,6 +55,7 @@ def plot_multiple_images(results):
 def main(args):
     # 1) get value from sample calibration image
     files_to_check = HT.getFilesInDirectory(args['directory'], '.jpg')
+    logger.info(f"Looking at {len(files_to_check)} jpg images", )
     results = []
     # option to use calibration
     if args['use_calibration']:
@@ -71,11 +74,14 @@ def main(args):
     elif args['use_hog']:
         detector = ObjectDetector(loadPath=args["detector"])
         for f in tqdm(files_to_check, desc="finding plaques with HOG"):
-            results.extend(SD.get_plaques_with_hog(f, hog=detector, save_directory=args['save_directory'], _debug_mode=args['debug']))
+        # for f in files_to_check:
+            plaque_details_list = SD.get_plaques_with_hog(f, hog=detector, save_directory=args['save_directory'], _debug_mode=args['debug'])
+            logger.info(f"How many results for {f}: {len(plaque_details_list)}")
+            results.extend(plaque_details_list)
 
     # 4) after successfull plaque grabbing, use open and image stuff to get a bounding box around just the words, and send that to ocr
-    for idx, meta in tqdm(enumerate(results), desc="reading text from cropped images"):
-        results[idx].text, results[idx].thresheld_image = TR.tess_from_image(results[idx].image)
+    # for idx, meta in tqdm(enumerate(results), desc="reading text from cropped images"):
+    #     results[idx].text, results[idx].thresheld_image = TR.tess_from_image(results[idx].image)
 
     # 5) plot the results
     # plot_multiple_images(results)
@@ -105,8 +111,13 @@ def evaluate_performance(results):
     results_numpy_array = numpy.array([r.to_list() for r in results])
     results_df = pandas.DataFrame(results_numpy_array, columns=headers)
     # hacky fix until we get some pose info
-    results_df['pose_info'] = None  # results_df['source_image_location'].apply(lambda x: float(os.path.split(x)[1].split('-')[0].replace('DSC', '0.')))
-    results_df.to_pickle('/home/johnny/Documents/performance_metrics_3-6/hog_result_df.pkl')
+    # results_df['source_image_location'].apply(lambda x: float(os.path.split(x)[1].split('-')[0].replace('DSC', '0.')))
+    results_df['pose_info'] = None
+    # get precision (TP/(TP+FP))
+    # get recall (TP/(TP+FN))
+    # get f1 score (2*precision*recall)/(precision+recall)
+
+    results_df.to_pickle(f'/home/johnny/Documents/performance_metrics_2021-01/hog_and_east_{datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")}.pkl')
 
 
 if __name__ == "__main__":
@@ -119,5 +130,5 @@ if __name__ == "__main__":
     parser.add_argument("--detector", required=False, help="location of trained svm detector")
     parser.add_argument("-g", "--debug", required=False, default=False, type=bool, help="logger.info everything?")
     args = vars(parser.parse_args())
-    logger.info(args)
+    logger.info(f"variables: {locals()}")
     main(args)

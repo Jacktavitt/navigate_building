@@ -36,7 +36,7 @@ class ImageDetectionMetadata():
         """
         creates explicitly-ordered list of elements in the object
         """
-        has_plaque = True if self.source_image_location in LIST_OF_POSITIVES else False
+        has_plaque = True if self.source_image_location.split('/')[-1] in LIST_OF_POSITIVES else False
         plaque_found = True if self.contour_area > 0 else False
         self.label = [x.replace('-', '') for x in re.findall(r"-[0-9,a-z]*-", self.source_image_location)]
         matched = list(set(self.text) & set(self.label))
