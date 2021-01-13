@@ -68,15 +68,18 @@ def main(args):
         # TODO: below steps can be optimized with text recognition happpening over the returned list
         # we get a dict of file names, with each filename having a list of metadata
         for f in tqdm(files_to_check, desc=f"finding plaques with area {area}"):
-            results.extend(SD.get_plaques_matching_ratio(f, good_area=area,
-                                                         save_directory=args['save_directory'], _debug_mode=args['debug']))
+            results.extend(SD.get_plaques_matching_ratio(
+                f,
+                good_area=area,
+                save_directory=args['save_directory'],
+                _debug_mode=args['debug'],
+                cutoff_ratio=float(args['cutoff_ratio'])))
     # option to use object detection
     elif args['use_hog']:
         detector = ObjectDetector(loadPath=args["detector"])
         for f in tqdm(files_to_check, desc="finding plaques with HOG"):
-        # for f in files_to_check:
             plaque_details_list = SD.get_plaques_with_hog(f, hog=detector, save_directory=args['save_directory'], _debug_mode=args['debug'])
-            logger.info(f"How many results for {f}: {len(plaque_details_list)}")
+            logger.debug(f"How many results for {f}: {len(plaque_details_list)}")
             results.extend(plaque_details_list)
 
     # 4) after successfull plaque grabbing, use open and image stuff to get a bounding box around just the words, and send that to ocr
@@ -113,9 +116,21 @@ def evaluate_performance(results):
     # hacky fix until we get some pose info
     # results_df['source_image_location'].apply(lambda x: float(os.path.split(x)[1].split('-')[0].replace('DSC', '0.')))
     results_df['pose_info'] = None
+    results_df['TP'] = results_df.apply(lambda row: row['image_has_plaque'] is True and row['plaque_found'] is True, axis=1)
+    results_df['FP'] = results_df.apply(lambda row: row['image_has_plaque'] is False and row['plaque_found'] is True, axis=1)
+    results_df['TN'] = results_df.apply(lambda row: row['image_has_plaque'] is False and row['plaque_found'] is False, axis=1)
+    results_df['FN'] = results_df.apply(lambda row: row['image_has_plaque'] is True and row['plaque_found'] is False, axis=1)
+    TP, TN, FN, FP = results_df[['TP', 'TN', 'FN', 'FP']].sum().values
     # get precision (TP/(TP+FP))
+    precision = TP / (TP + FP)
     # get recall (TP/(TP+FN))
+    recall = TP / (TP + FN)
     # get f1 score (2*precision*recall)/(precision+recall)
+    f1 = (2 * precision * recall) / (precision + recall)
+    logger.info(
+        "\nTrue Positive: %s\nTrue Negative: %s\nFalse Positive: %s\nFalse Negative: %s\nPrecision: %s\nRecall: %s\nF1: %s\n",
+        TP, TN, FP, FN, precision, recall, f1
+    )
 
     results_df.to_pickle(f'/home/johnny/Documents/performance_metrics_2021-01/hog_and_east_{datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")}.pkl')
 
@@ -128,6 +143,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--directory", required=True, help="location of images to be tested")
     parser.add_argument("-s", "--save-directory", required=False, help="where output plaque images will be saved")
     parser.add_argument("--detector", required=False, help="location of trained svm detector")
+    parser.add_argument("--cutoff-ratio", required=False, default=.30, help="area ratio cutoff for calibration technique")
     parser.add_argument("-g", "--debug", required=False, default=False, type=bool, help="logger.info everything?")
     args = vars(parser.parse_args())
     logger.info(f"variables: {locals()}")

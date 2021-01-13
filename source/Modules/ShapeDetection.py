@@ -160,7 +160,8 @@ def calibratePlaque(source_image):
     tk.Button(window, text="CONFIRM SELECTION", image=PIXEL, command=CloseWindow, compound='c', width=(image.get_width())).pack(side='top')
     window.mainloop()
 
-    logger.info(f"chosen item: {chosen.get()} in the result:{areas[int(chosen.get())]}")
+    logger.info(f"chosen item: {chosen.get()}")
+    logger.debug(f"in the result:{areas[int(chosen.get())]}")
     logger.debug(f"just for shits: whole area dictionary: {areas}")
     return areas[int(chosen.get())]
 
@@ -192,9 +193,9 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
     dirty_copy = image.copy()
     if image.size < 1 or dirty_copy.size < 1:
         # either it is a junk image, or the copy failed.
-        logger.info(f"image not valid: {source_image_location}")
+        logger.debug(f"image not valid: {source_image_location}")
         return []
-    logger.info(f"processing file {source_image_location}")
+    logger.debug(f"processing file {source_image_location}")
     source_directory, source_file_name = os.path.split(source_image_location)
     # set up payload
     list_of_plaque_meta_payloads = []
@@ -214,9 +215,9 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
         if use_biggest_contour:
             contour_areas = [cv2.moments(c)['m00'] for c in contours]
             if not contour_areas:
-                logger.info("empty contour areas for biggest contour")
+                logger.debug("empty contour areas for biggest contour")
                 continue
-            logger.info(f"contour areas: {contour_areas}")
+            logger.debug(f"contour areas: {contour_areas}")
             # could this just use a lambda to get the biggest area without splitting it out?
             location_of_biggest = contour_areas.index(max(contour_areas))
             big_countour = contours[location_of_biggest]
@@ -224,7 +225,7 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
         for ci, c in enumerate(contours):
             approx = cv2.approxPolyDP(c, 0.04 * cv2.arcLength(c, True), True)
             rect_points = numpy.array([x[0] for x in approx])
-            logger.info(f"creating payload for file {source_image_location}, with contour number {ci}")
+            logger.debug(f"creating payload for file {source_image_location}, with contour number {ci}")
             payload = ImageDetectionMetadata()
             # take whatever the image may be, and make it a rectangle
             payload.image = HT.four_point_transform(cropped_roi, rect_points)
@@ -249,7 +250,7 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
     return list_of_plaque_meta_payloads
 
 
-def get_plaques_matching_ratio(source_image_location, *, save_directory, good_area, _debug_mode=False, _fileio=False):
+def get_plaques_matching_ratio(source_image_location, *, save_directory, good_area, _debug_mode=False, _fileio=False, cutoff_ratio=.30):
     '''
     source_image: CustomImage object
     good_ratio: best ratio for a plaque
@@ -281,7 +282,7 @@ def get_plaques_matching_ratio(source_image_location, *, save_directory, good_ar
         # 2) compare that area with good area/ratio supplied to function
         ratio_good_to_maybe = min(good_area / contour_area, contour_area / good_area) if good_area != 0 and contour_area != 0 else 0
         # 3) if it is close enough, skew and crop to get proper h/w
-        if ratio_good_to_maybe > .30:
+        if ratio_good_to_maybe >= cutoff_ratio:
 
             if _debug_mode:
                 cv2.rectangle(debug_copy, (min_rec_x, min_rec_y), (min_rec_x + min_rec_w, min_rec_y + min_rec_h), (10, 0, 225), 2)
@@ -296,6 +297,7 @@ def get_plaques_matching_ratio(source_image_location, *, save_directory, good_ar
             if _fileio:
                 payload.plaque_image_location = os.path.join(save_directory, f"{i}_" + source_file_name)
                 cv2.imwrite(payload.plaque_image_location, payload.image)
+            
             list_of_plaque_meta_payloads.append(payload)
 
     if _debug_mode:
@@ -303,4 +305,8 @@ def get_plaques_matching_ratio(source_image_location, *, save_directory, good_ar
         cv2.waitKey()
         cv2.destroyWindow(f"points for area {contour_area}")
 
+    if not list_of_plaque_meta_payloads:
+        payload = ImageDetectionMetadata()
+        payload.source_image_location = source_image_location
+        list_of_plaque_meta_payloads.append(payload)
     return list_of_plaque_meta_payloads
