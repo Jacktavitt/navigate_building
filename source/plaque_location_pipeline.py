@@ -55,7 +55,7 @@ def plot_multiple_images(results):
 def main(args):
     # 1) get value from sample calibration image
     files_to_check = HT.getFilesInDirectory(args['directory'], '.jpg')
-    logger.info(f"Looking at {len(files_to_check)} jpg images", )
+    logger.info(f"Looking at {len(files_to_check)} jpg images")
     results = []
     # option to use calibration
     if args['use_calibration']:
@@ -110,6 +110,8 @@ def evaluate_performance(results):
         self.other = {}
     headers = ['label', 'parsed_text', 'found_contour_area', 'ref_contour_area', 'source_image_location', 'image_has_plaque', 'plaque_found', 'text_matched', 'text_missed', 'text_misread']
     """
+    with open('/home/johnny/Documents/performance_metrics_2021-01/what_are_the_results_anyway.pkl', 'wb') as f:
+        pickle.dump(results, f)
     headers = ImageDetectionMetadata.headers
     results_numpy_array = numpy.array([r.to_list() for r in results])
     results_df = pandas.DataFrame(results_numpy_array, columns=headers)

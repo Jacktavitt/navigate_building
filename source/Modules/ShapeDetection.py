@@ -187,6 +187,8 @@ def canny_edge_and_contours(source_image, *, threshold_1=50, threshold_2=250):
 
 def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_mode=False, use_biggest_contour=False, _fileio=True):
     '''
+    generates predictions with HOG. for each of these predictions, we crop it out and look for contours.
+    those contours are then skewed to fit a rectagnel, and sent along with the data.
     '''
     # open file and load it up
     image = cv2.imread(source_image_location)
@@ -297,7 +299,7 @@ def get_plaques_matching_ratio(source_image_location, *, save_directory, good_ar
             if _fileio:
                 payload.plaque_image_location = os.path.join(save_directory, f"{i}_" + source_file_name)
                 cv2.imwrite(payload.plaque_image_location, payload.image)
-            
+
             list_of_plaque_meta_payloads.append(payload)
 
     if _debug_mode:

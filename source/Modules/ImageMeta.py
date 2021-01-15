@@ -6,7 +6,7 @@ with open('/home/johnny/Documents/navigate_building/source/assets/images_with_pl
 
 
 class ImageDetectionMetadata():
-    headers = ['label', 'parsed_text', 'found_contour_area', 'ref_contour_area', 'source_image_location', 'image_has_plaque', 'plaque_found', 'text_matched', 'text_missed', 'text_misread']
+    headers = ['label', 'parsed_text', 'found_contour_area', 'ref_contour_area', 'source_image_location', 'image', 'image_has_plaque', 'plaque_found', 'text_matched', 'text_missed', 'text_misread']
 
     def __init__(self):
         self.contour_area = numpy.nan
@@ -26,6 +26,7 @@ class ImageDetectionMetadata():
         countour area: {self.contour_area}
         reference area: {self.reference_area}
         plaque image location: {self.plaque_image_location}
+        image included: {isinstance(self.image, numpy.ndarray)}
         possible text: {', '.join([x for x in self.text])}
         pose information: {self.pose_information}
         source image location: {self.source_image_location}
@@ -48,6 +49,7 @@ class ImageDetectionMetadata():
             self.contour_area,
             self.reference_area,
             self.source_image_location,
+            self.image,
             has_plaque,
             plaque_found,
             matched,
