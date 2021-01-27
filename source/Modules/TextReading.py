@@ -78,14 +78,65 @@ def get_text_with_aerd(image):
     height = 320
     gray = exposure.rescale_intensity(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY), out_range=(0, 255))
     rois, drawn_rois = aerd.detect_ranges_with_east(image, width, height, east, min_confidence)
-    for i, r in enumerate(rois):
-        rect_points = numpy.array(r)
-        # TODO: switch the trnaform to simple crop
+    for i, (sxsy, exey, sxey, exsy) in enumerate(rois):
+        # rect_points = numpy.array((sxsy, exey, sxey, exsy))
+        # make the y a little bigger
+        rect_points = numpy.array((
+            sxsy,
+            (exey[0], exey[1]+5),
+            (sxey[0], sxey[1]+5),
+            exsy
+        ))
         text_crop = HT.four_point_transform(gray, rect_points)
         _, thresh2 = cv2.threshold(text_crop, 100, 255, cv2.THRESH_BINARY)
+        # eroded = cv2.erode(thresh2, numpy.ones((7,7), numpy.uint8), iterations=1)
+
         # 5) use pytesseract
         pil_image = cv2.cvtColor(thresh2, cv2.COLOR_GRAY2RGB)
+        inv = cv2.bitwise_not(pil_image)
+        HT.showKill(thresh2, waitkey=2000)
+        HT.showKill(inv, waitkey=2000)
         text = pytesseract.image_to_string(pil_image, config="-l eng --psm 9")
+        # raw line
+        # tex2t = pytesseract.image_to_string(pil_image, config="-l eng --psm 13")
+        # etext = pytesseract.image_to_string(eroded, config="-l eng --psm 9")
+        tex2t = pytesseract.image_to_string(inv, config="-l eng --psm 9")
+        print(f"text {text}\nother: {tex2t}")
         text_list.append(text.lower())
         thresh_list.append(thresh2)
+    return text_list, thresh_list
+
+
+def get_text_with_aerd_crop_and_add(image):
+    # uses the east algortithm
+    thresh_list = []
+    text_list = []
+    east = '/home/johnny/Documents/navigate_building/frozen_east_text_detection.pb'
+    min_confidence = 0.5
+    width = 320
+    height = 320
+    gray = exposure.rescale_intensity(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY), out_range=(0, 255))
+    rois, drawn_rois = aerd.detect_ranges_with_east(image, width, height, east, min_confidence)
+    if drawn_rois:
+        HT.showKill(drawn_rois[-1], waitkey=2000)
+    for i, (sxsy, exey, sxey, exsy) in enumerate(rois):
+        rect_points = numpy.array((sxsy, exey, sxey, exsy))
+        print(rect_points)
+        # TODO: switch the trnaform to simple crop
+        # text_crop = HT.four_point_transform(gray, rect_points)
+        # print(sxsy[1],exey[1], sxsy[0],exey[0])
+        text_crop = gray[sxsy[1]:exey[1]+5, sxsy[0]:exey[0]+5]
+        # print('text_crop: ', text_crop)
+        HT.showKill(text_crop, waitkey=2000)
+        _, thresh2 = cv2.threshold(text_crop, 100, 255, cv2.THRESH_BINARY)
+
+        # 5) use pytesseract
+        # pil_image = cv2.cvtColor(thresh2, cv2.COLOR_GRAY2RGB)
+        psmtext = pytesseract.image_to_string(text_crop, config="-l eng --psm 9")
+        pslntext = pytesseract.image_to_string(text_crop)
+        HT.showKill(gray, waitkey=2000)
+        HT.showKill(text_crop, waitkey=2000)
+        print(f"plain text: {pslntext}\npsm text: {psmtext}")
+        text_list.append((pslntext.lower(), psmtext.lower()))
+        thresh_list.append(text_crop)
     return text_list, thresh_list

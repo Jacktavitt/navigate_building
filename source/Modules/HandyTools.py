@@ -34,7 +34,7 @@ def hiLow255(num):
     return 0 if num > 122 else 255
 
 
-def showKill(image, *, title=None):
+def showKill(image, title=None, waitkey=1000):
     '''takes cv2 image and shows it.
         if something goes wrong and window is clicked closed, it will recover.
     '''
@@ -43,7 +43,7 @@ def showKill(image, *, title=None):
     try:
         cv2.imshow(title, image)
         while status > 0:
-            ks=cv2.waitKey(1000)
+            ks=cv2.waitKey(waitkey)
             try:
                 status = cv2.getWindowProperty(title,cv2.WND_PROP_VISIBLE)
             except Exception:

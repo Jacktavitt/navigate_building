@@ -94,6 +94,18 @@ def main(args):
     evaluate_performance(results)
 
 
+def run_text(directory):
+    # for img in tqdm(os.listdir(directory), desc="reading text from images"):
+    for img in os.listdir(directory):
+        # print(img)
+        # pp = img.split(' ')[-1]
+        # read_text, thresheld_image = TR.get_text_with_tess(cv2.imread(os.path.join(directory, img)))
+        # logger.info(f"TESSERACT -> file name: {pp}\ntext read: '{read_text}'\n")
+        a_r_t, _ = TR.get_text_with_aerd(cv2.imread(os.path.join(directory, img)))
+        # logger.info(f"AERD -> file name: {pp}\ntext read: '{a_r_t}'\n")
+        # logger.info(f"file name: {pp}\nTESS: {read_text}\nAERD: {a_r_t}")
+
+
 def evaluate_performance(results):
     """
     resutls are a list of metaData objects:
@@ -142,6 +154,8 @@ if __name__ == "__main__":
     parser.add_argument("--calibration-image", required=False, help="image to calibrate images in directory")
     parser.add_argument("--use-calibration", required=False, default=False, help="image to calibrate images in directory")
     parser.add_argument("--use-hog", required=False, default=False, help="use HOG to find plaques")
+    parser.add_argument("--images-only", required=False, default=False, help="run only the text from image part")
+
     parser.add_argument("-d", "--directory", required=True, help="location of images to be tested")
     parser.add_argument("-s", "--save-directory", required=False, help="where output plaque images will be saved")
     parser.add_argument("--detector", required=False, help="location of trained svm detector")
@@ -149,4 +163,7 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--debug", required=False, default=False, type=bool, help="logger.info everything?")
     args = vars(parser.parse_args())
     logger.info(f"variables: {locals()}")
-    main(args)
+    if args.get('images_only'):
+        run_text(args['directory'])
+    else:
+        main(args)
