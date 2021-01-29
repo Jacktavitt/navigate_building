@@ -4,6 +4,8 @@ import os
 import cv2
 import argparse
 import numpy
+import math
+import matplotlib.pyplot as plt
 
 
 def getFilesInDirectory(directory, fileType):
@@ -162,3 +164,36 @@ def order_points(pts):
     rect[3] = pts[numpy.argmax(diff)]
     # return the ordered coordinates
     return rect
+
+
+def _plot_multiple_images(labels_and_images, num_imgs=36, rows=6, cols=6):
+    total_number = len(labels_and_images)
+    # num_imgs = 36
+    num_iterations = math.ceil(total_number / num_imgs)
+    # rows = math.ceil(math.sqrt(numgs))
+    # cols = math.ceil(numgs / rows)
+    # rows = 6
+    # cols = 6
+    for n in range(num_iterations):
+        fig = plt.figure(facecolor='gray')
+        for idx, title_img_tup in enumerate(labels_and_images[n * num_imgs:n * num_imgs + num_imgs]):
+            # print(title_img_tup)
+            sp = fig.add_subplot(cols, rows, idx + 1)
+            # image = cv2.resize(title_img_tup[1], (title_img_tup[1].shape[1]//3, title_img_tup[1].shape[0]//3), interpolation=cv2.INTER_AREA)
+            image = title_img_tup[1]
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+            plt.imshow(numpy.array(image, dtype=float))
+            sp.set_title(title_img_tup[0])
+            sp.set_yticklabels([])
+            sp.set_xticklabels([])
+        # fig.set_size_inches(numpy.array(fig.get_size_inches()) * numgs)
+        fig.set_size_inches(numpy.array(fig.get_size_inches()) * 20)
+        plt.show()
+
+
+def plot_result_images(results):
+    labels_and_images = []
+    for meta in results:
+        if meta.text and meta.thresheld_image:
+            labels_and_images.extend([(meta.text[n], meta.thresheld_image[n]) for n in range(len(meta.text))])
+    _plot_multiple_images(labels_and_images)

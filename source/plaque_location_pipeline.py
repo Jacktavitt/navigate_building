@@ -18,38 +18,8 @@ from ImageMeta import ImageDetectionMetadata
 from detector import ObjectDetector
 import logging
 
-logging.basicConfig(format='[%(asctime)s] <%(funcName)s> : %(message)s', filename='wholerun.log', level=logging.INFO)
+logging.basicConfig(format='[%(asctime)s] <%(funcName)s> : %(message)s', filename=f"run_{datetime.datetime.now().strftime('%Y-%m-%d')}.log", level=logging.INFO)
 logger = logging.getLogger('wholerun')
-
-
-def plot_multiple_images(results):
-    labels_and_images = []
-    for meta in results:
-        if meta.text and meta.thresheld_image:
-            labels_and_images.extend([(meta.text[n], meta.thresheld_image[n]) for n in range(len(meta.text))])
-    total_number = len(labels_and_images)
-    num_imgs = 36
-    num_iterations = math.ceil(total_number / num_imgs)
-    # rows = math.ceil(math.sqrt(numgs))
-    # cols = math.ceil(numgs / rows)
-    rows = 6
-    cols = 6
-    for n in range(num_iterations):
-        fig = plt.figure(facecolor='gray')
-        for idx, title_img_tup in enumerate(labels_and_images[n * num_imgs:n * num_imgs + num_imgs]):
-            logger.info(title_img_tup)
-            sp = fig.add_subplot(cols, rows, idx + 1)
-            # image = cv2.resize(title_img_tup[1], (title_img_tup[1].shape[1]//3, title_img_tup[1].shape[0]//3), interpolation=cv2.INTER_AREA)
-            image = title_img_tup[1]
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-            plt.imshow(numpy.array(image, dtype=float))
-            sp.set_title(title_img_tup[0])
-            sp.set_yticklabels([])
-            sp.set_xticklabels([])
-        # fig.set_size_inches(numpy.array(fig.get_size_inches()) * numgs)
-        fig.set_size_inches(numpy.array(fig.get_size_inches()) * 20)
-        plt.show()
-        # plt.savefig(f'/home/johnny/Documents/plaque_grab_3-4/pyplot_test/plaque_plot_simp_{n}.png')
 
 
 def main(args):
@@ -95,13 +65,12 @@ def main(args):
 
 
 def run_text(directory):
-    # for img in tqdm(os.listdir(directory), desc="reading text from images"):
+    all_res = []
     for img in os.listdir(directory):
-        # print(img)
-        # pp = img.split(' ')[-1]
-        # read_text, thresheld_image = TR.get_text_with_tess(cv2.imread(os.path.join(directory, img)))
-        # logger.info(f"TESSERACT -> file name: {pp}\ntext read: '{read_text}'\n")
-        a_r_t, _ = TR.get_text_with_aerd(cv2.imread(os.path.join(directory, img)))
+        # all_res.append(TR.test_aerd_size(cv2.imread(os.path.join(directory, img))))
+        # all_res.append(TR.test_aerd_roi(cv2.imread(os.path.join(directory, img))))
+        all_res.append(TR.test_aerd_OCR_mode(cv2.imread(os.path.join(directory, img))))
+        # a_r_t, _ = TR.get_text_with_aerd(cv2.imread(os.path.join(directory, img)))
         # logger.info(f"AERD -> file name: {pp}\ntext read: '{a_r_t}'\n")
         # logger.info(f"file name: {pp}\nTESS: {read_text}\nAERD: {a_r_t}")
 

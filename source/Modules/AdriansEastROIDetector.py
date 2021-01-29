@@ -10,6 +10,7 @@ def main(args):
 
 
 def detect_ranges_with_east(image, width, height, east, min_confidence):
+    """(h and w should be multiple of 32)"""
     # load the input image and grab the image dimensions
     # image = cv2.imread(image)
     orig = image.copy()
