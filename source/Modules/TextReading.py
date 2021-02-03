@@ -256,6 +256,51 @@ def test_aerd_OCR_mode(image):
     return text_img_tup_list
 
 
+def the_ringer(image, filename):
+    # uses the east algortithm
+    # for visualizing different text prep testing
+    result_dict_list = []
+    east = '/home/johnny/Documents/navigate_building/frozen_east_text_detection.pb'
+    min_confidence = 0.5
+    for image_multiplier in [1, 2, 4, 8]:
+        image = cv2.resize(image, None, fx=image_multiplier, fy=image_multiplier, interpolation=cv2.INTER_CUBIC)
+        gray = exposure.rescale_intensity(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY), out_range=(0, 255))
+        for sz in [256, 320, 352, 384]:
+            width = sz
+            height = sz
+
+            rois, drawn_rois = aerd.detect_ranges_with_east(image, width, height, east, min_confidence)
+            for i, (sxsy, exey, sxey, exsy) in enumerate(rois):
+                # make the y a little bigger
+                x1, y1 = sxsy
+                x2, y2 = exey
+                crop = gray[y1:y2 + 5, x1:x2 + 5]
+                for thresh in [75, 100, 125, 150]:
+                    thresheld = cv2.threshold(crop, thresh, 255, cv2.THRESH_BINARY)[1]
+                    inverted = cv2.bitwise_not(thresheld)
+                    for ocr_num in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]:
+                        ocr_config = f"-l eng --psm {ocr_num}"
+                        try:
+                            inverted_text = pytesseract.image_to_string(inverted, config=ocr_config)
+                        except Exception as e:
+                            inverted_text = f'ERROR: {str(e)}'
+                        try:
+                            not_inverted_text = pytesseract.image_to_string(thresheld, config=ocr_config)
+                        except Exception as e:
+                            not_inverted_text = f'ERROR: {str(e)}'
+                        result_dict_list.append({
+                            'file_name': filename,
+                            'image_size': image.shape[:2],
+                            'image_multiplier': image_multiplier,
+                            'roi_size': sz,
+                            'threshold_level': thresh,
+                            'ocr_config': ocr_config,
+                            'inverted_text': inverted_text,
+                            'not_inverted_text': not_inverted_text
+                        })
+    return result_dict_list
+
+
 def test_aerd_roi(image):
     # uses the east algortithm
     text_img_tup_list = []

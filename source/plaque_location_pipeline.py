@@ -3,6 +3,7 @@ import argparse
 import math
 import numpy
 import pandas
+import json
 import pickle
 import os
 import datetime
@@ -66,14 +67,21 @@ def main(args):
 
 def run_text(directory):
     all_res = []
-    for img in os.listdir(directory):
+    for img in tqdm(os.listdir(directory), desc=f'running through the ringer'):
         # all_res.append(TR.test_aerd_size(cv2.imread(os.path.join(directory, img))))
         # all_res.append(TR.test_aerd_roi(cv2.imread(os.path.join(directory, img))))
-        all_res.append(TR.test_aerd_OCR_mode(cv2.imread(os.path.join(directory, img))))
+        # all_res.append(TR.test_aerd_OCR_mode(cv2.imread(os.path.join(directory, img))))
+        run_res = TR.the_ringer(cv2.imread(os.path.join(directory, img)), img)
+        with open('/home/johnny/Documents/text_reading_testing/ringer_raw_results_increment.json', 'a') as a:
+            json.dump(run_res, a, indent=2)
+        all_res.extend(run_res)
         # a_r_t, _ = TR.get_text_with_aerd(cv2.imread(os.path.join(directory, img)))
         # logger.info(f"AERD -> file name: {pp}\ntext read: '{a_r_t}'\n")
         # logger.info(f"file name: {pp}\nTESS: {read_text}\nAERD: {a_r_t}")
-
+    with open('/home/johnny/Documents/text_reading_testing/ringer_raw_resutls.json', 'w') as f:
+        json.dump(all_res, f, indent=2)
+    df = pandas.DataFrame(all_res)
+    df.to_pickle('/home/johnny/Documents/text_reading_testing/ringer_results.pkl')
 
 def evaluate_performance(results):
     """
