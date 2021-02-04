@@ -8,6 +8,7 @@ import random
 import numpy as np
 import platform
 import CustomErrors as cerr
+from skimage import exposure
 
 class Image(object):
     '''Base class for custom images. Trying hand at pythonic polymorphism.
@@ -174,6 +175,7 @@ class Image(object):
     def gray(self):
         '''make the image grayscale. pretty straighforward! overwrites original.'''
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+        self.image = exposure.rescale_intensity(self.image, out_range=(0,255))
         self.color = False
 
     def save(self, *, file_path=None, file_name=None ):
@@ -279,7 +281,8 @@ class GeneratedImage(Image):
 
     def skew(self, four_points):
         '''apply perspective tranformation to image
-            takes wither simple list or npfloats
+            takes either simple list or npfloats
+            tl, tr, br, bl order
         '''
         if not isinstance(four_points, np.ndarray):
             four_points = np.float32(four_points)

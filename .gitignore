@@ -17,3 +17,6 @@ source/**/images/
 source/**/nn_data/
 *.model
 *.h5
+frozen_east_text_detection.pb
+*.npy
+*.ipynb_checkpoints/

@@ -48,6 +48,6 @@ class Classifier(object):
         except Exception as e:
             print(f"<<<ERROR: prediction failed:\n{e}\n>>>")
             raise
-        pred_string = str(result) # f"Plaque: {result[0]}\nNot Plaque: {result[1]}\n"
+        pred_string = str(result)  # f"Plaque: {result[0]}\nNot Plaque: {result[1]}\n"
         cv2.putText(image.image, pred_string, (0,15), cv2.FONT_HERSHEY_SIMPLEX, .75, (255, 100, 250),2)
         image.show()
