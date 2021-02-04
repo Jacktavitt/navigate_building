@@ -170,13 +170,9 @@ def simpleCallBack(*args):
     logger.info(f'variable changed {args}')
 
 
-def canny_edge_and_contours(source_image, *, threshold_1=50, threshold_2=250):
-    if isinstance(source_image, CustomImage.Image):
-        image = source_image
-    else:
-        image = CustomImage.Image(source_image)
+def canny_edge_and_contours(image, *, threshold_1=50, threshold_2=250):
     # its edgin' time
-    edged = cv2.Canny(image.image, threshold_1, threshold_2)
+    edged = cv2.Canny(image, threshold_1, threshold_2)
     # fill gaps
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
     # closed = CIMAGE(cv2.morphologyEx(edged.image, cv2.MORPH_CLOSE, kernel))
@@ -192,8 +188,8 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
     '''
     # open file and load it up
     image = cv2.imread(source_image_location)
-    dirty_copy = image.copy()
-    if image.size < 1 or dirty_copy.size < 1:
+    # dirty_copy = image.copy()
+    if image.size < 1:  # or dirty_copy.size < 1:
         # either it is a junk image, or the copy failed.
         logger.debug(f"image not valid: {source_image_location}")
         return []
@@ -203,16 +199,19 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
     list_of_plaque_meta_payloads = []
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     predictions = hog.predict(rgb_image)
+    logger.info(f"number of predictions: {len(predictions)}")
     for pi, (x, y, xb, yb) in enumerate(predictions):
         # 1) for each prediction, grab the plaque image inside. this will likely be the largest contour.
-        cropped_roi = HT.crop_image(dirty_copy, x, y, xb, yb)
+        cropped_roi = image[y:yb, x:xb, :]
         # single dimension numpy array (junk)
         if cropped_roi.size < 1:
             continue
         gray = cv2.cvtColor(cropped_roi, cv2.COLOR_BGR2GRAY)
         # 2) blur and contour
         median_blur = cv2.medianBlur(gray, 9)
-        contours = canny_edge_and_contours(median_blur)
+        thresh = cv2.threshold(median_blur, 100, 255, cv2.THRESH_BINARY)[1]
+        edged = cv2.Canny(thresh, 100, 255)
+        contours = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1]
         # 3) get the biggest contour
         if use_biggest_contour:
             contour_areas = [cv2.moments(c)['m00'] for c in contours]
@@ -238,13 +237,7 @@ def get_plaques_with_hog(source_image_location, *, hog, save_directory, _debug_m
                 payload.plaque_image_location = os.path.join(save_directory, f"{pi}_{ci}" + source_file_name)
                 cv2.imwrite(payload.plaque_image_location, payload.image)
             list_of_plaque_meta_payloads.append(payload)
-            if _debug_mode:
-                cv2.rectangle(dirty_copy, (x, y), (xb, yb), (10, 0, 225), -1)
-                cv2.imshow("predicted region", dirty_copy)
-                cv2.imshow("cropped area", cropped_roi)
-                cv2.imshow("corrected contour", dirty_copy)
-                cv2.waitKey()
-                cv2.destroyAllWindows()
+
     if not list_of_plaque_meta_payloads:
         payload = ImageDetectionMetadata()
         payload.source_image_location = source_image_location
