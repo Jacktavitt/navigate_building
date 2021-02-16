@@ -65,6 +65,42 @@ def main(args):
     evaluate_performance(results)
 
 
+def run_plaques(directory, hog):
+    # 1) get value from sample calibration image
+    files_to_check = HT.getFilesInDirectory(directory, '.jpg')
+    logger.info(f"Looking at {len(files_to_check)} jpg images")
+    results = []
+    # option to use calibration
+    # if args['use_calibration']:
+    calib = CI.Image.open('/home/johnny/Documents/dylan_images/frame0286.jpg')
+    
+    calib_result = SD.calibratePlaque(calib)
+    area = calib_result.get('contour_area')
+    # ratio = calib_result.get('ratio')
+    # bl, tl, tr, br = calib_result.get('bl_tl_tr_br')
+    # 3) loop over images in a directory, outputting the names of positive and negative images
+    # TODO: below steps can be optimized with text recognition happpening over the returned list
+    # we get a dict of file names, with each filename having a list of metadata
+    for f in tqdm(files_to_check, desc=f"finding plaques with area {area}"):
+        results.extend(SD.get_plaques_matching_ratio(
+            f,
+            good_area=area,
+            cutoff_ratio=float(args['cutoff_ratio'])
+        ))
+    # option to use object detection
+    # elif args['use_hog']:
+    result = []
+    detector = ObjectDetector(loadPath=hog)
+    for f in tqdm(files_to_check, desc="finding plaques with HOG"):
+        d = SD.get_plaques_rigamarole(f, hog=detector)  #, save_directory, _debug_mode=False, use_biggest_contour=False, _fileio=True):
+        result.extend(d)
+    df = pandas.DataFrame(d)
+    df.to_pickle('/home/johnny/Documents/plaque_only_testing/hog_results_stats.pkl')
+        # SD.get_plaques_with_hog(f, hog=detector, save_directory=args['save_directory'], _debug_mode=args['debug'])
+            # logger.debug(f"How many results for {f}: {len(plaque_details_list)}")
+            # results.extend(plaque_details_list)
+
+
 def run_text(directory):
     all_res = []
     for img in tqdm(os.listdir(directory), desc=f'running through the ringer'):
@@ -127,7 +163,7 @@ if __name__ == "__main__":
     parser.add_argument("--use-calibration", required=False, default=False, help="image to calibrate images in directory")
     parser.add_argument("--use-hog", required=False, default=False, help="use HOG to find plaques")
     parser.add_argument("--images-only", required=False, default=False, help="run only the text from image part")
-
+    parser.add_argument("--plaques-only", required=False, default=False, help="run only the plaque finding part")
     parser.add_argument("-d", "--directory", required=True, help="location of images to be tested")
     parser.add_argument("-s", "--save-directory", required=False, help="where output plaque images will be saved")
     parser.add_argument("--detector", required=False, help="location of trained svm detector")
@@ -137,7 +173,9 @@ if __name__ == "__main__":
     logger.info(f"variables: {locals()}")
     if args.get('images_only'):
         run_text(args['directory'])
+    if args.get('plaques_only'):
+        run_plaques(args['directory'], args['detector'])
     else:
         main(args)
 
- pandas.crosstab(fn_df['lable'],[fn_df['inverted_text'], fn_df['not_inverted_text']], rownames=['actual'], colnames=['inverted', 'regular'], dropna=False) 
+#  pandas.crosstab(fn_df['lable'],[fn_df['inverted_text'], fn_df['not_inverted_text']], rownames=['actual'], colnames=['inverted', 'regular'], dropna=False) 
