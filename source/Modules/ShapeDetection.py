@@ -166,6 +166,86 @@ def calibratePlaque(source_image):
     return areas[int(chosen.get())]
 
 
+def calibrate_run_with_plaque(source_image_location):
+    '''sets the area and shape to expect from room marking plaques
+        what we need to find is a good size to judge the pother plaques by.
+    '''
+    # check what we're getting
+    image = cv2.imread(source_image_location)
+    # lets show an image of the contours, they each have a name
+    # and a radio button to choose the right one
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # 2) blur and contour
+    median_blur = cv2.medianBlur(gray, 9)
+    thresh = cv2.threshold(median_blur, 100, 255, cv2.THRESH_BINARY)[1]
+    edged = cv2.Canny(thresh, 100, 255)
+    contours = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1]
+    areas = {}
+    window = tk.Tk()
+    window.title("Please Choose Correct Contour")
+    window.configure(background='grey')
+
+    PIXEL = tk.PhotoImage(width=1, height=1)
+
+    listbox = tk.Listbox(window)
+    listbox.pack(side='right')
+    # scrollbar = tk.Scrollbar(listbox)
+    # scrollbar.pack(side='right', fill='y')
+    chosen = tk.StringVar()
+    chosen.trace('w', simpleCallBack)
+
+    def showChoice():
+        logger.info(chosen.get())
+
+    def CloseWindow():
+        logger.info(f"close window!")
+        if chosen.get():
+            window.destroy()
+
+    numbad = 0
+    numgood = 0
+    for idx, contour in enumerate(contours):
+        # logger.info(f'idx: {idx}, lencont: {len(contour)}\n')
+        try:
+            label = ALL_CHARS[numgood]
+        except Exception as e:
+            logger.error(e)
+            label = 'TILT'
+
+        areas[idx] = {}
+        areas[idx]['label'] = label
+        areas[idx]['contour'] = contour
+        areas[idx]['contour_area'], (areas[idx]['contour_w'], areas[idx]['contour_h']), (x, y) = drawSingleContour(image, contour)
+        areas[idx]['minred_area'], mrwh, areas[idx]['bl_tl_tr_br'] = drawSingleMinRec(image, contour)
+        areas[idx]['ratio'] = actualVsMBRArea(areas[idx]['contour_area'],  areas[idx]['minred_area'])
+
+        if catchWeirdShape(areas[idx]['contour_w'],
+                           areas[idx]['contour_h']) or catchWeirdShape(mrwh[0], mrwh[1]):
+            areas[idx]['valid'] = False
+            numbad += 1
+        else:
+            areas[idx]['valid'] = True
+            drawSingleContour(image, areas[idx]['contour'], color=(255, 0, 100), text=str(label))
+            if numgood % 10 == 0:
+                radioholder = tk.Listbox(listbox)
+                radioholder.pack(side='left')
+            tk.Radiobutton(radioholder, text=label, padx=20, variable=chosen, command=showChoice, value=str(idx)).pack(side='top')
+            numgood += 1
+
+    img = Image.fromarray(image)
+    img = ImageTk.PhotoImage(img)
+    panel = tk.Label(window, image=img)
+    panel.pack(side='bottom', fill='both', expand='yes')
+    window.update()
+    tk.Button(window, text="CONFIRM SELECTION", image=PIXEL, command=CloseWindow, compound='c', width=(image.shape[1])).pack(side='top')
+    window.mainloop()
+
+    logger.info(f"chosen item: {chosen.get()}")
+    logger.debug(f"in the result:{areas[int(chosen.get())]}")
+    logger.debug(f"just for shits: whole area dictionary: {areas}")
+    return areas[int(chosen.get())]
+
+
 def simpleCallBack(*args):
     logger.info(f'variable changed {args}')
 
@@ -307,7 +387,7 @@ def get_plaques_matching_ratio(source_image_location, *, save_directory, good_ar
     return list_of_plaque_meta_payloads
 
 
-def get_plaques_matching_ratio_rigamarole(source_image_location, *, save_directory, good_area, cutoff_ratio=.30):
+def get_plaques_matching_ratio_rigamarole(source_image_location, *, good_area, cutoff_ratio=.30):
     # open file and load it up
     image = cv2.imread(source_image_location)
     source_directory, source_file_name = os.path.split(source_image_location)
@@ -344,7 +424,7 @@ def get_plaques_matching_ratio_rigamarole(source_image_location, *, save_directo
         polypts = numpy.array([
             [bl[0], bl[1]], [tl[0], tl[1]], [tr[0], tr[1]], [br[0], br[1]],
         ], numpy.int32).reshape((-1,1,2))
-        # cv2.rectangle(imcopy, (tl[0], tl[1]), (br[0], br[1]), (255, 125, 0), 2)
+        # draw a thin pink contour
         cv2.polylines(marked_copy, [polypts], True, (255,100,255), 1)
         if ratio_good_to_maybe >= cutoff_ratio:
             rect_points = numpy.array([x[0] for x in approx])
@@ -356,15 +436,8 @@ def get_plaques_matching_ratio_rigamarole(source_image_location, *, save_directo
             cv2.polylines(marked_copy, [polypts], True, color, 3)
             colors.insert(0, color)
 
-            payload = ImageDetectionMetadata()
-            
-            # payload.image = HT.four_point_transform(clean_copy.image, rect_points)
-            # payload.contour_area = contour_area
-            # payload.reference_area = good_area
-            # payload.source_image_location = source_image_location
     HT.showKill(marked_copy, waitkey=6000)
-
-            # list_of_plaque_meta_payloads.append(payload)
+    cv2.imwrite(os.path.join('/home/johnny/Documents/plaque_only_testing/', source_file_name), marked_copy)
 
 
     if not list_of_plaque_meta_payloads:

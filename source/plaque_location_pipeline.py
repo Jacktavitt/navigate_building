@@ -71,31 +71,27 @@ def run_plaques(directory, hog):
     logger.info(f"Looking at {len(files_to_check)} jpg images")
     results = []
     # option to use calibration
-    # if args['use_calibration']:
-    calib = CI.Image.open('/home/johnny/Documents/dylan_images/frame0286.jpg')
-    
-    calib_result = SD.calibratePlaque(calib)
-    area = calib_result.get('contour_area')
-    # ratio = calib_result.get('ratio')
-    # bl, tl, tr, br = calib_result.get('bl_tl_tr_br')
-    # 3) loop over images in a directory, outputting the names of positive and negative images
-    # TODO: below steps can be optimized with text recognition happpening over the returned list
-    # we get a dict of file names, with each filename having a list of metadata
-    for f in tqdm(files_to_check, desc=f"finding plaques with area {area}"):
-        results.extend(SD.get_plaques_matching_ratio(
-            f,
-            good_area=area,
-            cutoff_ratio=float(args['cutoff_ratio'])
-        ))
+    if args['use_calibration']:
+        # calib = CI.Image.open('/home/johnny/Documents/dylan_images/frame0286.jpg')
+        calib_result = SD.calibrate_run_with_plaque('/home/johnny/Documents/dylan_images/frame0286.jpg')
+        # calib_result = SD.calibratePlaque(calib)
+        area = calib_result.get('contour_area')
+
+        for f in tqdm(files_to_check, desc=f"finding plaques with area {area}"):
+            results.extend(SD.get_plaques_matching_ratio_rigamarole(
+                f,
+                good_area=area,
+                cutoff_ratio=float(args['cutoff_ratio'])
+            ))
     # option to use object detection
-    # elif args['use_hog']:
-    result = []
-    detector = ObjectDetector(loadPath=hog)
-    for f in tqdm(files_to_check, desc="finding plaques with HOG"):
-        d = SD.get_plaques_rigamarole(f, hog=detector)  #, save_directory, _debug_mode=False, use_biggest_contour=False, _fileio=True):
-        result.extend(d)
-    df = pandas.DataFrame(d)
-    df.to_pickle('/home/johnny/Documents/plaque_only_testing/hog_results_stats.pkl')
+    elif args['use_hog']:
+        hog_result = []
+        detector = ObjectDetector(loadPath=hog)
+        for f in tqdm(files_to_check, desc="finding plaques with HOG"):
+            d = SD.get_plaques_rigamarole(f, hog=detector)  #, save_directory, _debug_mode=False, use_biggest_contour=False, _fileio=True):
+            hog_result.extend(d)
+        df = pandas.DataFrame(hog_result)
+        df.to_pickle('/home/johnny/Documents/plaque_only_testing/hog_results_stats.pkl')
         # SD.get_plaques_with_hog(f, hog=detector, save_directory=args['save_directory'], _debug_mode=args['debug'])
             # logger.debug(f"How many results for {f}: {len(plaque_details_list)}")
             # results.extend(plaque_details_list)
