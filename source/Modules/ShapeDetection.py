@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 import cv2
 import os
 import tkinter as tk
+import timeit
 import string
 from ImageMeta import ImageDetectionMetadata
 import logging
@@ -84,6 +85,7 @@ def drawBoundingBoxes(image, contours):
 
 
 def calibratePlaque(source_image):
+    """DEPRECATED"""
     '''sets the area and shape to expect from room marking plaques
         what we need to find is a good size to judge the pother plaques by.
     '''
@@ -440,14 +442,7 @@ def get_plaques_matching_ratio_rigamarole(source_image_location, *, good_area, c
     cv2.imwrite(os.path.join('/home/johnny/Documents/plaque_only_testing/', source_file_name), marked_copy)
 
 
-    if not list_of_plaque_meta_payloads:
-        payload = ImageDetectionMetadata()
-        payload.source_image_location = source_image_location
-        list_of_plaque_meta_payloads.append(payload)
-    return list_of_plaque_meta_payloads
-
-
-def get_plaques_rigamarole(source_image_location, *, hog):  #, save_directory, _debug_mode=False, use_biggest_contour=False, _fileio=True):
+def get_plaques_rigamarole(source_image_location, *, hog):
     '''
     generates predictions with HOG. for each of these predictions, we crop it out and look for contours.
     those contours are then skewed to fit a rectagnel, and sent along with the data.
@@ -463,14 +458,22 @@ def get_plaques_rigamarole(source_image_location, *, hog):  #, save_directory, _
     source_directory, source_file_name = os.path.split(source_image_location)
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     hog_predictions = hog.predict(rgb_image)
-    payload = []
-    logger.info(f"number of predictions: {len(hog_predictions)}")
     junk_roi = 0
     tval = 100
-    contour_data = []
-    bk = rgb_image.copy()
+    marked_copy = image.copy()
+    colors = [
+        (255, 125, 0),
+        (255,100,255),
+        (125,100,255),
+        (0,255,0),
+        (125,255,0),
+        (255,255,0),
+    ]
     for pi, (x, y, xb, yb) in enumerate(hog_predictions):
         # 1) for each prediction, grab the plaque image inside
+        color = colors.pop()
+        cv2.rectangle(marked_copy, (x, y), (xb, yb), color, 3)
+        colors.insert(0, color)
         cropped_roi = image[y:yb, x:xb, :]
         # single dimension numpy array (junk)
         if cropped_roi.size < 1:
@@ -485,43 +488,169 @@ def get_plaques_rigamarole(source_image_location, *, hog):  #, save_directory, _
         contour_areas = [cv2.moments(c)['m00'] for c in contours]
         if not contour_areas:
             continue
-        logger.debug(f"contour areas: {contour_areas}")
-        location_of_biggest = contour_areas.index(max(contour_areas))
-        contour_data = [
-            ("cropped roi", cropped_roi),
-            ("gray", cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)),
-            (f"thresh {tval}", cv2.cvtColor(thresh, cv2.COLOR_GRAY2RGB)),
-            ("edged", cv2.cvtColor(edged, cv2.COLOR_GRAY2RGB))
-        ]
         for ci, c in enumerate(contours):
-            imcopy = cropped_roi.copy()
-            cv2.drawContours(imcopy, [c], -1, (0, 255, 0), 3)
             approx = cv2.approxPolyDP(c, 0.04 * cv2.arcLength(c, True), True)
+            rect_points = numpy.array([x[0] for x in approx])
+            (tl, tr, br, bl) = HT.order_points(rect_points)
+
+            polypts = numpy.array([
+                [bl[0] + x, bl[1] + y],
+                [tl[0] + x, tl[1] + y],
+                [tr[0] + x, tr[1] + y],
+                [br[0] + x, br[1] + y],
+            ], numpy.int32).reshape((-1,1,2))
+            color = colors.pop()
+            cv2.polylines(marked_copy, [polypts], True, color, 1)
+            colors.insert(0, color)
+            cv2.polylines(marked_copy, [polypts], True, (255,100,255), 2)
+
+    HT.showKill(marked_copy, waitkey=6000)
+    cv2.imwrite(os.path.join('/home/johnny/Documents/plaque_only_testing/roi_heuristic_plaques', source_file_name), marked_copy)
+
+
+def area_plaque_finder(source_image_location, *, good_area, cutoff_ratio=.30):
+    # open file and load it up
+    start = timeit.default_timer()
+    image = cv2.imread(source_image_location)
+    source_directory, source_file_name = os.path.split(source_image_location)
+    # set up payload
+    num_found = 0
+    marked_copy = image.copy()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # 2) blur and contour
+    median_blur = cv2.medianBlur(gray, 9)
+    thresh = cv2.threshold(median_blur, 100, 255, cv2.THRESH_BINARY)[1]
+    edged = cv2.Canny(thresh, 100, 255)
+    contours = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1]
+    colors = [
+        (255, 125, 0),
+        (255,100,255),
+        (125,100,255),
+        (0,255,0),
+        (125,255,0),
+        (255,255,0),
+    ]
+    for i, c in enumerate(contours):
+        # 0) get contour information
+        peri = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, 0.04 * peri, True)
+        M = cv2.moments(c)
+        contour_area = float(M['m00'])
+        ratio_good_to_maybe = min(good_area / contour_area, contour_area / good_area) if good_area != 0 and contour_area != 0 else 0
+        # cv2.polylines(marked_copy, [polypts], True, (255,100,255), 1)
+        if ratio_good_to_maybe >= cutoff_ratio:
+            num_found += 1
             rect_points = numpy.array([x[0] for x in approx])
             (tl, tr, br, bl) = HT.order_points(rect_points)
             polypts = numpy.array([
                 [bl[0], bl[1]], [tl[0], tl[1]], [tr[0], tr[1]], [br[0], br[1]],
             ], numpy.int32).reshape((-1,1,2))
-            # cv2.rectangle(imcopy, (tl[0], tl[1]), (br[0], br[1]), (255, 125, 0), 2)
-            cv2.polylines(imcopy, [polypts], True, (255,100,255), 2)
+            color = colors.pop()
+            cv2.polylines(marked_copy, [polypts], True, color, 3)
+            colors.insert(0, color)
 
-            contour_data.append((f"prediction #{pi}\ncontour #{ci}, biggest: {ci == location_of_biggest}", imcopy))
-        payload.append({
-            'file_name': source_file_name,
-            'prediction_index': pi,
-            'num_contours': len(contours),
-            'contour_areas': contour_areas,
-            'is_junk': cropped_roi.size < 1
-        })
-        bk = numpy.zeros(cropped_roi.shape, dtype=numpy.uint8)
+    run_data = {'file_name': source_file_name, 'found_something': num_found, 'time': timeit.default_timer() - start}
+    if num_found > 0:
+        cv2.imwrite(os.path.join('/home/johnny/Documents/plaque_only_testing/area_found', source_file_name), marked_copy)
+    return run_data
 
-    cv2.putText(bk, f'{junk_roi}', (2,50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 125, 0), 1, cv2.LINE_AA)
-    # contour_data.append(('junk', bk))
-    # if len(contour_data) == 1:
-    #     show_multiple_color_images(contour_data, num_imgs=1, rows=1, cols=1, name=f"hog_{source_file_name}_wm")
-    # else:
-    #     show_multiple_color_images(contour_data, num_imgs=16, rows=4, cols=4, name=f"hog_{source_file_name}_wm")
-    return payload
+
+def hog_plaque_finder(source_image_location, *, hog):
+    '''
+    generates predictions with HOG. for each of these predictions, we crop it out and look for contours.
+    those contours are then skewed to fit a rectagnel, and sent along with the data.
+    '''
+    start = timeit.default_timer()
+    # open file and load it up
+    image = cv2.imread(source_image_location)
+    source_directory, source_file_name = os.path.split(source_image_location)
+    if image.size < 1:
+        # either it is a junk image, or the copy failed.
+        logger.debug(f"image not valid: {source_image_location}")
+        return {'file_name': source_file_name, 'found_something': False, 'time': None}
+
+    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    hog_predictions = hog.predict(rgb_image)
+    marked_copy = image.copy()
+    colors = [
+        (255, 125, 0),
+        (255,100,255),
+        (125,100,255),
+        (0,255,0),
+        (125,255,0),
+        (255,255,0),
+    ]
+    for pi, (x, y, xb, yb) in enumerate(hog_predictions):
+        # 1) for each prediction, grab the plaque image inside
+        color = colors.pop()
+        cv2.rectangle(marked_copy, (x, y), (xb, yb), color, 3)
+        colors.insert(0, color)
+
+    run_data = {'file_name': source_file_name, 'found_something': len(hog_predictions), 'time': timeit.default_timer() - start}
+
+    cv2.imwrite(os.path.join('/home/johnny/Documents/plaque_only_testing/roi_found', source_file_name), marked_copy)
+
+    return run_data
+
+
+def area_plaque_lean(source_image_location, *, good_area, cutoff_ratio=.30):
+    # open file and load it up
+    image = cv2.imread(source_image_location)
+    source_directory, source_file_name = os.path.split(source_image_location)
+    # set up payload
+
+    marked_copy = image.copy()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # 2) blur and contour
+    median_blur = cv2.medianBlur(gray, 9)
+    thresh = cv2.threshold(median_blur, 100, 255, cv2.THRESH_BINARY)[1]
+    edged = cv2.Canny(thresh, 100, 255)
+    contours = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1]
+    for i, c in enumerate(contours):
+        # 0) get contour information
+        peri = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, 0.04 * peri, True)
+        M = cv2.moments(c)
+        contour_area = float(M['m00'])
+        # 2) compare that area with good area/ratio supplied to function
+        ratio_good_to_maybe = min(good_area / contour_area, contour_area / good_area) if good_area != 0 and contour_area != 0 else 0
+        # 3) if it is close enough, skew and crop to get proper h/w
+
+        if ratio_good_to_maybe >= cutoff_ratio:
+            rect_points = numpy.array([x[0] for x in approx])
+            HT.four_point_transform(image, rect_points)
+
+
+def roi_plaque_lean(source_image_location, *, hog):
+    # open file and load it up
+    image = cv2.imread(source_image_location)
+
+    if image.size < 1:
+        # either it is a junk image, or the copy failed.
+        logger.debug(f"image not valid: {source_image_location}")
+        return []
+    logger.debug(f"processing file {source_image_location}")
+
+    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    hog_predictions = hog.predict(rgb_image)
+
+    tval = 100
+    for pi, (x, y, xb, yb) in enumerate(hog_predictions):
+        cropped_roi = image[y:yb, x:xb, :]
+        # single dimension numpy array (junk)
+        if cropped_roi.size < 1:
+            continue
+        gray = cv2.cvtColor(cropped_roi, cv2.COLOR_BGR2GRAY)
+        # 2) blur and contour
+        median_blur = cv2.medianBlur(gray, 9)
+        thresh = cv2.threshold(median_blur, tval, 255, cv2.THRESH_BINARY)[1]
+        edged = cv2.Canny(thresh, 100, 255)
+        contours = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1]
+        contour_areas = [cv2.moments(c)['m00'] for c in contours]
+        if not contour_areas:
+            continue
+        for ci, c in enumerate(contours):
+            approx = cv2.approxPolyDP(c, 0.04 * cv2.arcLength(c, True), True)
 
 
 def show_multiple_color_images(imlist, num_imgs=0, rows=0, cols=0, name='sample'):
