@@ -64,7 +64,6 @@ class ImageGenerator(object):
         # print("\nDEBUG:\nBGV:{}\nPQV:{}\nPQS:{}\nFONTV:{}\nCOLOR:{}\nEND ~~"
         #         .format(self._bgv,self._pqv,self._pqs,self._fontv,self._color))
 
-
     def __str__(self):
         pass
 
@@ -118,7 +117,7 @@ class ImageGenerator(object):
         paper_size_w = res*8
         poster_size_h = random.randint(res*12, res* 36)
         poster_size_w = random.randint(res*12, res* 36)
-
+        # this is the zone where we should not be drawing anything
         zona_peligrosa_x = []
         # zona_peligrosa_y = [n for n in range(min(Dy1, Py1), max(Dy2, Py2))]
         # additionally, add restrictions for height (so things are only where people would see them)

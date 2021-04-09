@@ -20,7 +20,8 @@ def apply_transformations_to(image, directory, file_name_base):
     h_blur = image.copy()
     v_blur = image.copy()
     spin_cc.rotate(10.5)
-    spin_cc.rotate(-10.5)
+    spin_ac.rotate(-10.5)
+    spin_cc.save()
 
 
 def main(filename,percent,num,directory):
@@ -67,21 +68,28 @@ def main(filename,percent,num,directory):
             num_with_plq += 1
 
         crop = CustomImage.GeneratedImage(base.image[Y1:Y2,X1:X2, :])
-        file_name_base = ''.join([name,'_',percent,'p_',str(n),plaque,'.png'])
-        apply_transformations_to(crop, directory, file_name_base)
+        file_name_base = os.path.join(directory, f"{name}_{percent}_p_{n}{plaque}.png")
+        cv2.imwrite(file_name_base, crop.image)
+        # crop.save(file_name=file_name_base)
+        # apply_transformations_to(crop, directory, file_name_base)
     
     num_without = num - num_with_plq
     if num_without > num_with_plq:
         force_with = num_without - num_with_plq
-        plaque = 'True'
+        plaque = '_True'
         for n in range(force_with):
-            X1=TL[0] - 5
-            Y1=TL[1] - 3*n
+            X1 = random.randint(TL[0], TL[0] + 10)
+            # X1=TL[0] - 5
+            Y1 = random.randint(TL[1], TL[0] + 10)
+            # Y1=TL[1] - 3*n
             X2=X1+width
             Y2=Y1+height
             crop = CustomImage.GeneratedImage(base.image[Y1:Y2,X1:X2, :])
-            fname = ''.join([directory,name,'_',percent,'p_',str(n+num),plaque,'.png'])
-            crop.save(fname)
+            file_name_base = os.path.join(directory, f"{name}_{percent}_p_{n+num}{plaque}.png")
+            # fname = ''.join([directory,name,'_',percent,'p_',str(n+num),plaque,'.png'])
+            # print(fname)
+            # crop.save(file_name=fname)
+            cv2.imwrite(file_name_base, crop.image)
 
 
 

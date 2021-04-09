@@ -66,6 +66,9 @@ class Image(object):
 
     def get_height(self):
         return self.height
+    
+    def get_shape(self):
+        return self.height, self.width, None
 
     def get_dimensions(self):
         return self.dimensions
@@ -178,7 +181,7 @@ class Image(object):
         self.image = exposure.rescale_intensity(self.image, out_range=(0,255))
         self.color = False
 
-    def save(self, *, file_path=None, file_name=None ):
+    def save(self, *, file_path=None, file_name=None):
         '''Saves image to file.
         TODO: allow for changing file name
         '''
