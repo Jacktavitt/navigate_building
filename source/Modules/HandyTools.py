@@ -36,7 +36,7 @@ def hiLow255(num):
     return 0 if num > 122 else 255
 
 
-def showKill(image, title=None, waitkey=1000):
+def showKill(image, title=None, waitkey=0):
     '''takes cv2 image and shows it.
         if something goes wrong and window is clicked closed, it will recover.
     '''

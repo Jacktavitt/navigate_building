@@ -7,9 +7,7 @@ be passing over it, and then does that randomly n times.
 '''
 import os
 import cv2
-import numpy as np
 import random
-import CustomImage
 from argparse import ArgumentParser
 
 def apply_transformations_to(image, directory, file_name_base):
@@ -24,89 +22,57 @@ def apply_transformations_to(image, directory, file_name_base):
     spin_cc.save()
 
 
-def main(filename,percent,num,directory):
+def main(filename, winsize, num, directory):
     '''driver for splitting up generated images into smaller snapshots.
-    works with CustomImage Image objects.
     Args:
         filename: location of image on disk.
         percent: how much smaller than the original image each snap
             should be.
         num: how many snaps to make
         directory: where to save the snaps
-    
     '''
-    base = CustomImage.Image.open(filename)
-    # base.resize(percentage=50)
-    # base.show()
-    pcnt = .01*float(percent)
-    num = int(num)
+    base = cv2.imread(filename)
+    base_height, base_width, _ = base.shape
     # filename has the location of the plaque baked in. This way, the generated
     # set of snapshots will be able to tell us if they actually have the numbered
     # plaque in the image.
-    splitname=os.path.basename(filename).split('.')
-    name=splitname[-2]
-    TL=tuple([int(x) for x in splitname[0].split('_')])
-    BR=tuple([int(x) for x in splitname[1].split('_')])
+    splitname = os.path.basename(filename).split('.')
+    name = splitname[-2]
+    TL = tuple([int(x) for x in splitname[0].split('_')])
+    BR = tuple([int(x) for x in splitname[1].split('_')])
+    # first make some that have the plaque in it
+    x1_list = random.choices(range(BR[0] - winsize, TL[0]), k=num)
+    y1_list = random.choices(range(BR[1] - winsize, TL[1]), k=num)
+    for x, y in zip(x1_list, y1_list):
+        crop = base[y:y + winsize, x:x + winsize, :].copy()
+        file_name_base = os.path.join(directory, f"{winsize}_{name}_{x}_{y}_true.png")
+        cv2.imwrite(file_name_base, crop)
 
-    y,x,_ = base.get_shape()
-    width = int(x*pcnt)
-    height = int(y*pcnt)
-
-    num_with_plq=0
-    # we need a safe range to allow for x and y when chopping.
-    # OK x will be 0 to x - wd, y so also.
-    for n in range(num):
-        plaque=''
-        X1=random.randint(0,x-width)
-        Y1=random.randint(0,y-height)
-        X2=X1+width
-        Y2=Y1+height
-
-        # now to discover if the plaque is in the image
-        if X1 < TL[0] and Y1 < TL[1] and X2 > BR[0] and Y2 > BR[1]:
-            plaque='_True'
-            num_with_plq += 1
-
-        crop = CustomImage.GeneratedImage(base.image[Y1:Y2,X1:X2, :])
-        file_name_base = os.path.join(directory, f"{name}_{percent}_p_{n}{plaque}.png")
-        cv2.imwrite(file_name_base, crop.image)
-        # crop.save(file_name=file_name_base)
-        # apply_transformations_to(crop, directory, file_name_base)
-    
-    num_without = num - num_with_plq
-    if num_without > num_with_plq:
-        force_with = num_without - num_with_plq
-        plaque = '_True'
-        for n in range(force_with):
-            X1 = random.randint(TL[0], TL[0] + 10)
-            # X1=TL[0] - 5
-            Y1 = random.randint(TL[1], TL[0] + 10)
-            # Y1=TL[1] - 3*n
-            X2=X1+width
-            Y2=Y1+height
-            crop = CustomImage.GeneratedImage(base.image[Y1:Y2,X1:X2, :])
-            file_name_base = os.path.join(directory, f"{name}_{percent}_p_{n+num}{plaque}.png")
-            # fname = ''.join([directory,name,'_',percent,'p_',str(n+num),plaque,'.png'])
-            # print(fname)
-            # crop.save(file_name=fname)
-            cv2.imwrite(file_name_base, crop.image)
+    # now lets make some without plaque in it
+    left_of_plaque = list(range(0, TL[0] - winsize)) if TL[0] >= winsize else []
+    right_of_plaque = list(range(BR[0], base_width)) if base_width >= winsize else []
+    valid_tl_x = left_of_plaque + right_of_plaque
+    x1_list_neg = random.choices(valid_tl_x, k=num)
+    y1_list_neg = random.choices(range(base_height - winsize), k=num)
+    for x, y in zip(x1_list_neg, y1_list_neg):
+        crop = base[y:y + winsize, x:x + winsize, :].copy()
+        file_name_base = os.path.join(directory, f"{winsize}_{name}_{x}_{y}_false.png")
+        cv2.imwrite(file_name_base, crop)
 
 
-
-if __name__=='__main__':
-    parser=ArgumentParser()
-    parser.add_argument('--file','-f', 
-                        help = 'image location on disk',
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--file', '-f',
+                        help='image location on disk',
                         required=True)
-    parser.add_argument('--percent','-p', 
-                        help = 'percent size of crop, ten percent would be 10.0, not 0.10',
+    parser.add_argument('--winsize', '-w',
+                        help='pixel size of window',
                         required=True)
-    parser.add_argument('--num','-n', 
-                        help = 'number of crops to make',
+    parser.add_argument('--num', '-n',
+                        help='number of crops to make',
                         required=True)
-    parser.add_argument('--directory','-d', 
-                        help = 'number of crops to make',
+    parser.add_argument('--directory', '-d',
+                        help='number of crops to make',
                         required=True)
-    args=parser.parse_args()
-    main(args.file,args.percent,args.num, args.directory)
-
+    args = parser.parse_args()
+    main(args.file, args.percent, args.num, args.directory)

@@ -19,6 +19,7 @@ parser.add_argument("-o", "--output_directory", required=True,
         help="directory where augmented images will be saved")
 parser.add_argument("-d", "--dimension", default=150, type=int)
 
+
 if __name__=="__main__":
     args = vars(parser.parse_args())
     directory = args["source_directory"]
