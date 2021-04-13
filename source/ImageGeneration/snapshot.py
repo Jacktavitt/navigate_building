@@ -50,7 +50,7 @@ def main(filename, winsize, num, directory):
 
     # now lets make some without plaque in it
     left_of_plaque = list(range(0, TL[0] - winsize)) if TL[0] >= winsize else []
-    right_of_plaque = list(range(BR[0], base_width)) if base_width >= winsize else []
+    right_of_plaque = list(range(BR[0], base_width - winsize)) if base_width >= winsize else []
     valid_tl_x = left_of_plaque + right_of_plaque
     x1_list_neg = random.choices(valid_tl_x, k=num)
     y1_list_neg = random.choices(range(base_height - winsize), k=num)
