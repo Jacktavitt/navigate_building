@@ -41,8 +41,10 @@ def main(filename, winsize, num, directory):
     TL = tuple([int(x) for x in splitname[0].split('_')])
     BR = tuple([int(x) for x in splitname[1].split('_')])
     # first make some that have the plaque in it
-    x1_list = random.choices(range(BR[0] - winsize, TL[0]), k=num)
-    y1_list = random.choices(range(BR[1] - winsize, TL[1]), k=num)
+    x_limit = TL[0] if TL[0] <= base_width - winsize else base_width - winsize
+    y_limit = TL[1] if TL[1] <= base_width - winsize else base_width - winsize
+    x1_list = random.choices(range(max(0, BR[0] - winsize), x_limit), k=num)
+    y1_list = random.choices(range(max(0, BR[1] - winsize), y_limit), k=num)
     for x, y in zip(x1_list, y1_list):
         crop = base[y:y + winsize, x:x + winsize, :].copy()
         file_name_base = os.path.join(directory, f"{winsize}_{name}_{x}_{y}_true.png")
@@ -62,8 +64,8 @@ def main(filename, winsize, num, directory):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--file', '-f',
-                        help='image location on disk',
+    parser.add_argument('--source_directory', '-s',
+                        help='directory of images to snapshot',
                         required=True)
     parser.add_argument('--winsize', '-w',
                         help='pixel size of window',
@@ -75,4 +77,10 @@ if __name__ == '__main__':
                         help='number of crops to make',
                         required=True)
     args = parser.parse_args()
-    main(args.file, args.percent, args.num, args.directory)
+    for filename in os.listdir(args.source_directory):
+        main(
+            os.path.join(args.source_directory, filename),
+            int(args.winsize),
+            int(args.num),
+            args.directory
+        )

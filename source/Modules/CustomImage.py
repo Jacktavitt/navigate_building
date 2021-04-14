@@ -343,7 +343,6 @@ class GeneratedImage(Image):
             thickness = random.randint(1,10)
             self.line(top_left, bottom_right, value, thickness)
 
-
     def random_rectangles(self, *, seed=None, num_recs=2, zona_peligrosa_x=None, zona_peligrosa_y=None, rec_w=None, rec_h=None):
         '''add random rectangles
         Args:
@@ -359,7 +358,6 @@ class GeneratedImage(Image):
         ok_x = [n for n in self.possible_x if (n + rec_w) not in zona_peligrosa_x] if zona_peligrosa_x else self.possible_x
         ok_y = [n for n in self.possible_y if n not in zona_peligrosa_y] if zona_peligrosa_y else self.possible_y
 
-
         for n in range(num_recs):
             # each of these is a rectangle dummy!
             top_left = (random.choice(ok_x), random.choice(ok_y))
@@ -372,6 +370,3 @@ class GeneratedImage(Image):
                 value = (value, val2, val3)
             thickness = random.randint(-10, 10)
             self.rectangle(top_left, bottom_right, value, thickness)
-
-
-
