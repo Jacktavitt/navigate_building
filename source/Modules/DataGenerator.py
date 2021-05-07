@@ -70,8 +70,8 @@ class ImageGenerator(object):
     def create_canvas(self):
         '''create a base image object
         '''
-        image = self._imgclass(np.full((self._size),self._bgv,np.uint8),
-                            color=self._color,seed=random.randint(0,255))
+        image = self._imgclass(np.full((self._size), self._bgv,np.uint8),
+                            color=self._color, seed=random.randint(0, 255))
         return image
 
     def make_hallway(self, *, res=None, txt='358B', papers=None, posters=None):
@@ -225,11 +225,15 @@ class ImageGenerator(object):
         ''' 
         image.random_lines(seed=random.randint(0,1000),
                             num_lines = stuffScale*2)
-        image.random_rectangles(seed=random.randint(0,1000),
-                            num_recs = stuffScale)
+        image.random_rectangles(
+            seed=random.randint(0,1000),
+            num_recs=stuffScale,
+            rec_h=random.randint(0,170),
+            rec_w=random.randint(0,280)
+        )
         return image
 
-    def _draw_room_number(self, image, x, y, *, FSCALE=1, text=None):
+    def _draw_room_number(self, image, x, y, *, FSCALE=.75, text=None):
         '''Helper function. Draws room number/letter on the plaque.
             Args:
                 self: instance
@@ -239,7 +243,7 @@ class ImageGenerator(object):
         if text is None:
             text = self._gen_plaque_text()
         # cv2.putText(img, text, origin, fontFace, fontScale, color[, thickness[, lineType[, bottomLeftOrigin]]])   
-        cv2.putText(image.image, text, (x,y), self._font, FSCALE, self._fontv, 3)
+        cv2.putText(image.image, text, (x,y), self._font, FSCALE, self._fontv, 2)
         return image
 
     def draw_door(self, image, x_coord, value=(7,30,56), *, DH=None, DW=None, CH=None):
@@ -288,7 +292,6 @@ class ImageGenerator(object):
         point2x = point1x + width
         point2y = point1y + width
         top_left = (point1x, point1y)
-        # print("DEBUG point1: {}\n".format(p1))
         bottom_right = (point2x, point2y)
         # adding possible scenarios for elliptical or triangular palques. not implemented yet.
         if self._plaque_shape is 1:
@@ -296,6 +299,38 @@ class ImageGenerator(object):
         elif self._plaque_shape is 2:
             pass
         return top_left, bottom_right
+
+    def draw_special_room_sign(self, image, top_left=None, width=75, height=105):
+        '''places a numbered room sign somewhere on image, 
+            marks filename as having room sign
+            Args:
+                image: image object
+                top_left: coordinates for placement of top left
+                of plaque. if None, randomly place.
+                    should be (point1x,point1y)
+            Returns:
+                top_left: x, y coordinate of top left of rectangle
+                bottom_right: x, y coordinate of bottom left of rectgl
+        '''
+        #create random starting point within boundaries
+        if top_left is not None:
+            point1x, point1y = top_left
+        else:
+            point1x = random.randint(0, (self._size[0]-width))
+            point1y = random.randint(0, (self._size[0]-height))
+        top_left = (point1x, point1y)
+        bottom_right = (point1x + width, point1y + height)
+        # adding possible scenarios for elliptical or triangular palques. not implemented yet.
+
+        image.rectangle(top_left, bottom_right, self._pqv, -1)
+        # draw another rectangle to look like the plaques, 13 px from top, 10 px in from the sides, 33 px tall, 57 wide
+        top_left = (top_left[0] + 10, top_left[1] + 13)
+        bottom_right = (top_left[0] + 57, top_left[1] + 33)
+        image.rectangle(top_left, bottom_right, (240,240,240), -1)
+        bottom_right = (bottom_right[0], bottom_right[1] + 5)
+        # and then to put the text, it hosuld be under this new rectangle
+
+        return (top_left[0] + 5, top_left[1] + 5 + 33 + 20)
 
     def make_false_image(self, num_randos=4, seasoning = 0.02, *, blur = None):
         '''generate an image without a room sign.
@@ -313,7 +348,7 @@ class ImageGenerator(object):
             image.blur()
         return image
 
-    def make_true_image(self, num_randos=4, seasoning = 0.02, *, blur = None):
+    def make_true_image(self, num_randos=4, seasoning=0.02, *, blur=None, special=True):
         '''generate an image with a room sign.
         Args:
             num_randos: how many random lines/recs to add
@@ -322,8 +357,11 @@ class ImageGenerator(object):
         '''
         image = self.create_canvas()
         image = self.add_stuff(image, num_randos)
-        (px,py), (px2,py2) = self.draw_room_sign(image)
-        image = self._draw_room_number(image, (px, py))
+        if special:
+            (px,py) = self.draw_special_room_sign(image)
+        else:
+            (px,py), (px2,py2) = self.draw_room_sign(image)
+        image = self._draw_room_number(image, px, py)
         image.salt_and_pepper(seasoning)
         if blur is not None:
             image.blur(blur)

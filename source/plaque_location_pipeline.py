@@ -90,12 +90,13 @@ def run_plaques(directory, hog):
         df.to_pickle('/home/johnny/Documents/plaque_only_testing/area_found/result_df.pkl')
     # option to use object detection
     elif args['use_hog']:
+        hog_name = os.path.split(hog)[1].split('.')[0]
         hog_result = []
         detector = ObjectDetector(loadPath=hog)
         for f in tqdm(files_to_check, desc="finding plaques with HOG"):
             hog_result.append(SD.hog_plaque_finder(f, hog=detector))
         df = pandas.DataFrame(hog_result)
-        df.to_pickle('/home/johnny/Documents/plaque_only_testing/roi_found/result_df.pkl')
+        df.to_pickle(f"/home/johnny/Documents/plaque_only_testing/hog_found/result_df_{hog_name}_{datetime.datetime.now().strftime('%Y-%m-%d-%s')}.pkl")
 
 
 def time_hog(image):

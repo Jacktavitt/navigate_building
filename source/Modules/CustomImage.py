@@ -261,7 +261,6 @@ class Image(object):
         return image
 
 
-
 class GeneratedImage(Image):
     '''images that are created. Inherits init from parent Image
     '''
@@ -343,7 +342,7 @@ class GeneratedImage(Image):
             thickness = random.randint(1,10)
             self.line(top_left, bottom_right, value, thickness)
 
-    def random_rectangles(self, *, seed=None, num_recs=2, zona_peligrosa_x=None, zona_peligrosa_y=None, rec_w=None, rec_h=None):
+    def random_rectangles(self, *, seed=None, num_recs=2, zona_peligrosa_x=None, zona_peligrosa_y=None, rec_w=8, rec_h=12):
         '''add random rectangles
         Args:
             seed: seed for randomint
@@ -361,7 +360,7 @@ class GeneratedImage(Image):
         for n in range(num_recs):
             # each of these is a rectangle dummy!
             top_left = (random.choice(ok_x), random.choice(ok_y))
-            bottom_right = (top_left[0]+rec_w, top_left[1]+rec_h)
+            bottom_right = (top_left[0] + rec_w, top_left[1] + rec_h)
 
             value = random.randint(180, 255)
             if self.color:

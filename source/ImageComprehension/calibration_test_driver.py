@@ -8,10 +8,12 @@ import CustomImage as CI
 def main(args):
     '''do stuff'''
     image = CI.Image.open(args[1])
-    return SD.calibratePlaque(image)
+    # return SD.calibratePlaque(image)
+    return SD.calibrate_run_with_plaque(args[1])
 
 
 if __name__=='__main__':
-    AREA, RATIO = main(sys.argv)
-    print(f"chosen item: {RATIO}\n{AREA[int(RATIO)]}")
+    result = main(sys.argv)
+    # print(f"chosen item: {RATIO}\n{AREA[int(RATIO)]}")
+    print(result)
 
