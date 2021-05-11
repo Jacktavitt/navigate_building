@@ -587,7 +587,7 @@ def hog_plaque_finder(source_image_location, *, hog):
         colors.insert(0, color)
 
     run_data = {'file_name': source_file_name, 'found_something': len(hog_predictions), 'time': timeit.default_timer() - start}
-    cv2.imwrite(os.path.join('/home/johnny/Documents/plaque_only_testing/made_up_detector_found', source_file_name), marked_copy)
+    cv2.imwrite(os.path.join('/home/johnny/Documents/plaque_only_testing/specific_made_up_detector_found', source_file_name), marked_copy)
 
     return run_data
 

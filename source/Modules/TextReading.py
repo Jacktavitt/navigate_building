@@ -2,6 +2,7 @@
 # python source/plaque_location_pipeline.py -c ~/Desktop/smallp.jpg -d ~/Documents/real_world_images/small_plaques -s ~/Documents/plaque_grab_3-4/simple_roi
 # python source/plaque_location_pipeline.py -c ~/Desktop/smallp.jpg -d ~/Documents/real_world_images/small_plaques -s ~/Documents/plaque_grab_3-4/east_roi
 import cv2
+import os
 import numpy
 import pytesseract
 from skimage import exposure
@@ -28,14 +29,56 @@ def tess_from_image(source_image):
     return texts, threshses
 
 
+def get_text_with_image_manipulation(image, image_name):
+    label = os.path.splitext(os.path.split(image_name)[1])[0].strip('_').split('_')[-1].lower()
+    found = False
+    colors = [
+        (255, 125, 0),
+        (255,100,255),
+        (125,100,255),
+        (0,255,0),
+        (125,255,0),
+        (255,255,0),
+    ]
+    text_list = []
+    thresh_list = []
+    marked_list = []
+    # 2) get bounding box around text
+    # 2a) threshold and use open and expand to make the light area larger
+    gray = exposure.rescale_intensity(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY), out_range=(0, 255))
+    dilated = cv2.dilate(gray.copy(), None, iterations=3)
+    t, thresh = cv2.threshold(dilated, 200, 255, cv2.THRESH_BINARY)
+    _, contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for c in contours:
+        min_rec_x, min_rec_y, min_rec_w, min_rec_h = cv2.boundingRect(c)
+        text_crop = gray[min_rec_y:min_rec_y + min_rec_h, min_rec_x: min_rec_x + min_rec_w]
+        eight_times_larger = cv2.resize(text_crop, None, fx=8, fy=8, interpolation=cv2.INTER_CUBIC)
+        reverse = cv2.bitwise_not(cv2.threshold(eight_times_larger, 125, 255, cv2.THRESH_BINARY)[1])
+        pil_image = cv2.cvtColor(reverse, cv2.COLOR_GRAY2RGB)
+        text = pytesseract.image_to_string(pil_image, config="-l eng --psm 9")
+        marked = image.copy()
+        color = colors.pop()
+        cv2.rectangle(marked, (min_rec_x, min_rec_y), (min_rec_x+min_rec_w, min_rec_y+min_rec_h), color, 3)
+        cv2.putText(marked, text, (10,10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        marked_list.append(marked)
+        colors.insert(0, color)
+        if not found and label in text.lower():
+            found = True
+        # found = label in text.lower()
+        text_list.append(text.lower())
+        thresh_list.append(pil_image)
+        # print(f"image_name: {image_name}\nlabel: {label}\ntext: {', '.join(text_list)}")
+    return {'marked_list': marked_list, 'image_location': image_name, 'label': label, 'text': text_list, 'image_list': thresh_list, 'found': found}
+
+
 def get_text_with_tess(image):
     thresh_list = []
     text_list = []
     # 2) get bounding box around text
     # 2a) threshold and use open and expand to make the light area larger
     gray = exposure.rescale_intensity(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY), out_range=(0, 255))
-    dilated = cv2.dilate(gray.copy(), None, iterations=5)
-    closed = cv2.morphologyEx(dilated, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7)))
+    dilated = cv2.dilate(gray.copy(), None, iterations=3)
+    closed = cv2.morphologyEx(dilated, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))
     t, thresh = cv2.threshold(closed, 200, 255, cv2.THRESH_BINARY)
     _, contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # approx = cv2.approxPolyDP(contours[0], 0.04 * cv2.arcLength(contours[0], True), True)
